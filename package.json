@@ -1,1 +1,28 @@
-{\n  \"name\": \"buildinpublic-jp\",\n  \"version\": \"0.1.0\",\n  \"private\": true,\n  \"scripts\": {\n    \"dev\": \"next dev\",\n    \"build\": \"next build\",\n    \"start\": \"next start\",\n    \"brain\": \"npx ts-node --esm scripts/brain.ts\"\n  },\n  \"dependencies\": {\n    \"next\": \"14.2.0\",\n    \"react\": \"^18\",\n    \"react-dom\": \"^18\",\n    \"@supabase/supabase-js\": \"^2\",\n    \"@anthropic-ai/sdk\": \"^0.39.0\"\n  },\n  \"devDependencies\": {\n    \"typescript\": \"^5\",\n    \"@types/node\": \"^20\",\n    \"@types/react\": \"^18\",\n    \"@types/react-dom\": \"^18\",\n    \"tailwindcss\": \"^3\",\n    \"autoprefixer\": \"^10\",\n    \"postcss\": \"^8\",\n    \"ts-node\": \"^10\"\n  }\n}\n
+{
+  "name": "buildinpublic-jp",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "brain": "npx ts-node --skipProject -O '{\"module\":\"commonjs\"}' scripts/brain.ts"
+  },
+  "dependencies": {
+    "next": "14.2.0",
+    "react": "^18",
+    "react-dom": "^18",
+    "@supabase/supabase-js": "^2",
+    "@anthropic-ai/sdk": "^0.39.0"
+  },
+  "devDependencies": {
+    "typescript": "^5",
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "tailwindcss": "^3",
+    "autoprefixer": "^10",
+    "postcss": "^8",
+    "ts-node": "^10"
+  }
+}
