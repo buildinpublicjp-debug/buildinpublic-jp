@@ -1,60 +1,81 @@
-# buildinpublic.jp - Agent Instructions (Harness v2)
+# buildinpublic.jp - Agent Instructions (Harness v3)
+
+---
 
 ## ミッション
-コミュニティのコメント1行からAIがサイトを毎回進化させる実験。
-毎日のcron実行でapp/page.tsxが別物になる。
+
+コミュニティの集合的意志をAIが解釈し、毎日サイトを別の何かに進化させる実験。
+面白いかどうかだけが基準。機能するかより、スクショしたくなるかが重要。
 
 ---
 
-## GUIDE（実行前に読む指示書）
+## STEP 1: コンテキストを読む（必ず最初に実行）
 
-### 現在の状態を確認せよ
-まず以下を順番に読む:
-1. `state/current_version.json` - 今どのバージョンか
-2. `state/next_plan.md` - 今回の実装指示（brainが生成済み）
-3. `state/versions/` の最新JSON - 前回何をやったか
+以下を順番に読んで、今の状況を把握する:
 
-### 変更してよいファイル
-```
-app/page.tsx          ← ここだけ変更する
-state/                ← commitに含める
-```
-
-### 絶対に変更してはいけないファイル
-```
-app/versions/page.tsx
-app/api/submit/route.ts
-app/layout.tsx
-scripts/brain.ts
-.github/
-CLAUDE.md
-```
-
-### 実装ルール
-1. `state/next_plan.md` の指示を完全に読み、その方向性で実装する
-2. Next.js 14 App Router + Tailwind CSS のみ使う
-3. フォーム（コメント送信）は必ず残す
-4. `/versions` へのリンクは必ず残す
-5. ファイル冒頭に `// v{番号} - {採用コメント}` を書く
-6. 外部ライブラリを新たにインストールしない（package.jsonを変更しない）
+1. `state/current_version.json` — 現在のバージョン番号と説明
+2. `state/next_plan.md` — brainが生成した今回の方向性とプラン
+3. `app/page.tsx` の現在の内容 — 既存のビジュアル言語を把握する
+4. `state/versions/` の最新1〜2件 — 直近のバージョンと被らないよう確認
 
 ---
 
-## SENSOR（実行後に自己確認せよ）
+## STEP 2: 内部デザインブリーフを書く（実装前に自分用に整理する）
 
-実装が終わったら、commitする前に以下を自分でチェックする:
+実装を始める前に、以下を自分の中で明確にする:
 
-- [ ] app/page.tsx 以外のファイルを変更していないか？
-- [ ] フォームが残っているか？（`fetch('/api/submit'` が含まれているか）
-- [ ] `/versions` へのリンクが残っているか？
-- [ ] TypeScriptの型エラーがないか（明らかなものだけでよい）
-- [ ] ファイル冒頭にバージョンコメントがあるか？
-
-全てOKならcommitしてpushする。
+```
+ターゲット: スマホで見る人（iPhone想定）
+今回の方向性: （next_plan.mdから1行で）
+既存ビジュアルから継承するもの: （現page.tsxから読み取る）
+既存ビジュアルから脱却するもの: （今回の方向性に合わせて）
+絶対に壊してはいけないもの: フォーム・/versionsリンク
+クリエイティブの自由度: レイアウト・色・タイポ・アニメーション全て自由
+```
 
 ---
 
-## commitの手順（正確にこの通りにやる）
+## STEP 3: 実装する
+
+### 何を守るか（制約 = 変えてはいけない）
+
+- `app/page.tsx` **のみ**を変更する
+- フォーム機能（`fetch('/api/submit'`）を必ず残す
+- `/versions` へのリンクを必ず残す
+- `package.json` を変更しない（外部ライブラリ追加禁止）
+- ファイル冒頭に `// v{番号} - {方向性}` を書く
+
+### 何は自由か（クリエイティブの余地 = 思い切りやる）
+
+- レイアウト全体の構造
+- 配色・背景・グラデーション
+- タイポグラフィのサイズ・ウェイト・フォント指定
+- アニメーション・トランジション
+- インタラクション（ホバー・クリック・スクロール）
+- コンテンツのトーン・コピー
+- UIパターン（カード・モーダル・全画面・ゲームUI等）
+
+### 実装の方針
+
+next_plan.mdには方向性が書いてある。その**ビジュアルの感触・空気感**を実現することが目的。
+プランを逐語的に実装するのではなく、プランが目指す「見た目の体験」を自分で解釈して実装する。
+
+**良い実装**: 見た瞬間に「なんでこうなった」と言いたくなる
+**悪い実装**: 色を変えただけ、フォントを変えただけ、説明しないと伝わらない
+
+---
+
+## STEP 4: セルフチェック（commitする前に確認）
+
+- [ ] app/page.tsx 以外を変更していない
+- [ ] `fetch('/api/submit'` が存在する
+- [ ] `/versions` へのリンクが存在する
+- [ ] TypeScriptエラーが明らかにないか確認した
+- [ ] 直近バージョン（state/versions/最新）と明らかに違う見た目になっている
+
+---
+
+## STEP 5: commit & push
 
 ```bash
 git config user.name "buildinpublic-bot"
@@ -67,14 +88,21 @@ git push
 ---
 
 ## 技術スタック
-- Next.js 14 (App Router)
+
+- Next.js 14 (App Router) — `'use client'` を使えばReact hooksが使える
 - TypeScript
-- Tailwind CSS
-- Supabase（コメントDB）
-- Vercel（自動デプロイ、pushで自動発火）
+- Tailwind CSS — アニメーションは `animate-*` クラスまたはインラインCSSで
+- Vercel（pushで自動デプロイ）
 
----
+## 変更禁止ファイル
 
-## エントロピー管理
-このファイルはハーネスの指示書。モデルが更新されるたびに最適化される。
-過剰な実装より、シンプルで動く実装を優先する。
+```
+app/versions/page.tsx
+app/api/submit/route.ts
+app/layout.tsx
+app/globals.css
+scripts/
+.github/
+CLAUDE.md
+vercel.json
+```
