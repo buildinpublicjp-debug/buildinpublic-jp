@@ -26,7 +26,7 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      # ── GUIDE: コメント取得（事前コンテキスト準備）──
+      # ── GUIDE: コメント取得 ──
       - name: Fetch comments from Supabase
         id: fetch
         env:
@@ -62,14 +62,14 @@ jobs:
           COUNT=$(node -e "const d=require('./state/comments.json'); console.log(d.length)")
           echo "count=$COUNT" >> $GITHUB_OUTPUT
 
-      # ── GUIDE: AIブレイン（拡大解釈・スコアリング・プラン生成）──
+      # ── GUIDE: AIブレイン ──
       - name: Run brain (AI decision engine)
         if: steps.check.outputs.count != '0'
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: npx ts-node --skipProject -O '{"module":"commonjs"}' scripts/brain.ts
 
-      # ── EXECUTE: CCがプランを読んでサイトを書き換える ──
+      # ── EXECUTE: CCがサイトを書き換える ──
       - name: Claude Code rewrites the site
         if: steps.check.outputs.count != '0'
         uses: anthropics/claude-code-action@v1
@@ -78,7 +78,6 @@ jobs:
           claude_args: "--dangerously-skip-permissions"
           prompt: |
             CLAUDE.md を必ず最初に読んでください。
-
             その後、state/next_plan.md を読んで app/page.tsx を完全に書き換えてください。
 
             完了後:
@@ -88,30 +87,109 @@ jobs:
             git commit -m "evolve: $(node -e "const v=require('./state/current_version.json'); console.log('v'+v.number)")"
             git push
 
-      # ── SENSOR: ビルド検証（書き換え後に実際にビルドが通るか確認）──
-      - name: Verify build (sensor)
+      # ── SENSOR 1: ローカルビルド検証 ──
+      - name: Sensor 1 - Local build check
         if: steps.check.outputs.count != '0'
-        id: verify
+        id: build_check
         run: |
           git pull
           npm run build
-          echo "build_ok=true" >> $GITHUB_OUTPUT
+          echo "ok=true" >> $GITHUB_OUTPUT
         continue-on-error: true
 
-      # ── SENSOR: ビルド失敗時はrevertして記録 ──
-      - name: Revert if build failed
-        if: steps.check.outputs.count != '0' && steps.verify.outputs.build_ok != 'true'
+      # ── SENSOR 2: Vercelデプロイ待機 + 本番サイト検証 ──
+      - name: Install Playwright
+        if: steps.check.outputs.count != '0' && steps.build_check.outputs.ok == 'true'
         run: |
-          echo "⚠️ ビルド失敗 - revertします"
-          git revert HEAD --no-edit
-          git push
-          # 失敗ログを記録
-          mkdir -p state/logs
-          echo "{\"date\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\"status\":\"build_failed\",\"version\":$(cat state/current_version.json)}" >> state/logs/failures.jsonl
+          npm install -D @playwright/test
+          npx playwright install chromium --with-deps
 
-      # ── SENSOR: 使用済みコメントをマーク（成功時のみ）──
+      - name: Sensor 2 - Live site verification (Playwright)
+        if: steps.check.outputs.count != '0' && steps.build_check.outputs.ok == 'true'
+        id: live_check
+        run: |
+          # Vercelのデプロイ完了を待つ（最大3分）
+          echo "Vercelのデプロイ完了を待機中..."
+          sleep 120
+
+          # Playwrightで本番サイトを確認
+          node -e "
+          const { chromium } = require('@playwright/test');
+          (async () => {
+            const browser = await chromium.launch();
+            const page = await browser.newPage();
+            const results = {};
+
+            try {
+              // ページ読み込み
+              const res = await page.goto('https://buildinpublic.jp', { timeout: 30000 });
+              results.status = res.status();
+              results.url = page.url();
+
+              // スクリーンショット取得
+              await page.screenshot({ path: 'state/logs/screenshot_latest.png', fullPage: true });
+
+              // フォームの存在確認
+              const form = await page.\$('textarea, input[type=\"text\"]');
+              results.has_form = !!form;
+
+              // バージョン履歴リンクの確認
+              const versionsLink = await page.\$('a[href=\"/versions\"]');
+              results.has_versions_link = !!versionsLink;
+
+              // ページタイトル
+              results.title = await page.title();
+
+              // 表示されているテキスト（200文字）
+              const body = await page.textContent('body');
+              results.preview = body.slice(0, 200).replace(/\s+/g, ' ').trim();
+
+              console.log('RESULT:' + JSON.stringify(results));
+
+              if (!results.has_form) {
+                console.error('❌ フォームが見つかりません');
+                process.exit(1);
+              }
+              if (!results.has_versions_link) {
+                console.error('❌ /versionsリンクが見つかりません');
+                process.exit(1);
+              }
+
+              console.log('✅ 本番サイト検証OK');
+              console.log('  ステータス:', results.status);
+              console.log('  タイトル:', results.title);
+              console.log('  プレビュー:', results.preview);
+
+            } catch(e) {
+              console.error('❌ エラー:', e.message);
+              process.exit(1);
+            } finally {
+              await browser.close();
+            }
+          })();
+          "
+          echo "ok=true" >> $GITHUB_OUTPUT
+        continue-on-error: true
+
+      # ── SENSOR: 検証失敗時はrevert ──
+      - name: Revert if verification failed
+        if: |
+          steps.check.outputs.count != '0' &&
+          (steps.build_check.outputs.ok != 'true' || steps.live_check.outputs.ok != 'true')
+        run: |
+          echo "⚠️ 検証失敗 - revertします"
+          git revert HEAD --no-edit || true
+          git push || true
+          mkdir -p state/logs
+          REASON="${{ steps.build_check.outputs.ok != 'true' && 'build_failed' || 'live_check_failed' }}"
+          echo "{\"date\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\"status\":\"$REASON\"}" >> state/logs/failures.jsonl
+
+      # ── 使用済みコメントマーク（両方の検証が通った時のみ）──
       - name: Mark comments as used
-        if: steps.check.outputs.count != '0' && steps.verify.outputs.build_ok == 'true'
+        if: |
+          steps.check.outputs.count != '0' &&
+          steps.build_check.outputs.ok == 'true' &&
+          steps.live_check.outputs.ok == 'true'
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
@@ -135,15 +213,17 @@ jobs:
               });
           "
 
-      # ── OBSERVABILITY: 実行ログを記録 ──
+      # ── OBSERVABILITY: ログ記録（スクリーンショット含む）──
       - name: Log execution result
         if: steps.check.outputs.count != '0'
         run: |
           mkdir -p state/logs
-          STATUS="${{ steps.verify.outputs.build_ok == 'true' && 'success' || 'failed' }}"
-          echo "{\"date\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\"status\":\"$STATUS\",\"comments_count\":${{ steps.check.outputs.count }}}" >> state/logs/executions.jsonl
+          BUILD="${{ steps.build_check.outputs.ok == 'true' && 'ok' || 'failed' }}"
+          LIVE="${{ steps.live_check.outputs.ok == 'true' && 'ok' || 'failed' }}"
+          STATUS="${{ steps.build_check.outputs.ok == 'true' && steps.live_check.outputs.ok == 'true' && 'success' || 'failed' }}"
+          echo "{\"date\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\"status\":\"$STATUS\",\"build\":\"$BUILD\",\"live\":\"$LIVE\",\"comments\":${{ steps.check.outputs.count }}}" >> state/logs/executions.jsonl
           git config user.name "buildinpublic-bot"
           git config user.email "bot@buildinpublic.jp"
           git add state/logs/
-          git diff --staged --quiet || git commit -m "log: execution $(date -u +%Y-%m-%d)"
+          git diff --staged --quiet || git commit -m "log: $(date -u +%Y-%m-%d) $STATUS"
           git push
