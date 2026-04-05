@@ -97,99 +97,72 @@ jobs:
           echo "ok=true" >> $GITHUB_OUTPUT
         continue-on-error: true
 
-      # ── SENSOR 2: Vercelデプロイ待機 + 本番サイト検証 ──
+      # ── SENSOR 2: Playwright + CCサブエージェントによる本番E2E検証 ──
       - name: Install Playwright
         if: steps.check.outputs.count != '0' && steps.build_check.outputs.ok == 'true'
         run: |
           npm install -D @playwright/test
           npx playwright install chromium --with-deps
 
-      - name: Sensor 2 - Live site verification (Playwright)
+      - name: Wait for Vercel deploy
         if: steps.check.outputs.count != '0' && steps.build_check.outputs.ok == 'true'
-        id: live_check
         run: |
-          # Vercelのデプロイ完了を待つ（最大3分）
-          echo "Vercelのデプロイ完了を待機中..."
+          echo "Vercelのデプロイ完了を待機中（2分）..."
           sleep 120
 
-          # Playwrightで本番サイトを確認
-          node -e "
-          const { chromium } = require('@playwright/test');
-          (async () => {
-            const browser = await chromium.launch();
-            const page = await browser.newPage();
-            const results = {};
+      # CCサブエージェントがqa-agent.tsを実行して実際の操作を行う
+      - name: Sensor 2 - CC QA subagent (E2E interaction)
+        if: steps.check.outputs.count != '0' && steps.build_check.outputs.ok == 'true'
+        id: qa_check
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          claude_args: "--dangerously-skip-permissions"
+          prompt: |
+            あなたはQAサブエージェントです。
+            buildinpublic.jp の本番サイトが正常に動作しているか確認してください。
 
-            try {
-              // ページ読み込み
-              const res = await page.goto('https://buildinpublic.jp', { timeout: 30000 });
-              results.status = res.status();
-              results.url = page.url();
+            以下を実行してください:
 
-              // スクリーンショット取得
-              await page.screenshot({ path: 'state/logs/screenshot_latest.png', fullPage: true });
+            1. scripts/qa-agent.ts を実行する
+               npx ts-node --skipProject -O '{"module":"commonjs"}' scripts/qa-agent.ts
 
-              // フォームの存在確認
-              const form = await page.\$('textarea, input[type=\"text\"]');
-              results.has_form = !!form;
+            2. 実行後、state/logs/qa_result.json を読んで結果を確認する
 
-              // バージョン履歴リンクの確認
-              const versionsLink = await page.\$('a[href=\"/versions\"]');
-              results.has_versions_link = !!versionsLink;
+            3. all_ok が false だった場合は、失敗したステップを明示してexit 1で終了する
 
-              // ページタイトル
-              results.title = await page.title();
+            4. all_ok が true だった場合は、以下を実行してスクリーンショットをコミットする:
+               git config user.name "buildinpublic-bot"
+               git config user.email "bot@buildinpublic.jp"
+               git add state/logs/
+               git diff --staged --quiet || git commit -m "qa: screenshots $(date +%Y-%m-%d)"
+               git push
 
-              // 表示されているテキスト（200文字）
-              const body = await page.textContent('body');
-              results.preview = body.slice(0, 200).replace(/\s+/g, ' ').trim();
-
-              console.log('RESULT:' + JSON.stringify(results));
-
-              if (!results.has_form) {
-                console.error('❌ フォームが見つかりません');
-                process.exit(1);
-              }
-              if (!results.has_versions_link) {
-                console.error('❌ /versionsリンクが見つかりません');
-                process.exit(1);
-              }
-
-              console.log('✅ 本番サイト検証OK');
-              console.log('  ステータス:', results.status);
-              console.log('  タイトル:', results.title);
-              console.log('  プレビュー:', results.preview);
-
-            } catch(e) {
-              console.error('❌ エラー:', e.message);
-              process.exit(1);
-            } finally {
-              await browser.close();
-            }
-          })();
-          "
-          echo "ok=true" >> $GITHUB_OUTPUT
-        continue-on-error: true
+            QAが失敗した場合は必ずexit 1を返してください。
 
       # ── SENSOR: 検証失敗時はrevert ──
-      - name: Revert if verification failed
+      - name: Revert if QA failed
         if: |
           steps.check.outputs.count != '0' &&
-          (steps.build_check.outputs.ok != 'true' || steps.live_check.outputs.ok != 'true')
+          (steps.build_check.outputs.ok != 'true' || steps.qa_check.outcome == 'failure')
         run: |
           echo "⚠️ 検証失敗 - revertします"
+          git pull
           git revert HEAD --no-edit || true
           git push || true
           mkdir -p state/logs
-          REASON="${{ steps.build_check.outputs.ok != 'true' && 'build_failed' || 'live_check_failed' }}"
+          REASON="${{ steps.build_check.outputs.ok != 'true' && 'build_failed' || 'qa_failed' }}"
           echo "{\"date\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\"status\":\"$REASON\"}" >> state/logs/failures.jsonl
+          git add state/logs/
+          git commit -m "log: revert $REASON" || true
+          git push || true
 
-      # ── 使用済みコメントマーク（両方の検証が通った時のみ）──
+      # ── 使用済みコメントマーク（全検証が通った時のみ）──
       - name: Mark comments as used
         if: |
           steps.check.outputs.count != '0' &&
           steps.build_check.outputs.ok == 'true' &&
-          steps.live_check.outputs.ok == 'true'
+          steps.qa_check.outcome == 'success'
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
@@ -213,15 +186,15 @@ jobs:
               });
           "
 
-      # ── OBSERVABILITY: ログ記録（スクリーンショット含む）──
+      # ── OBSERVABILITY: 実行ログ ──
       - name: Log execution result
         if: steps.check.outputs.count != '0'
         run: |
           mkdir -p state/logs
           BUILD="${{ steps.build_check.outputs.ok == 'true' && 'ok' || 'failed' }}"
-          LIVE="${{ steps.live_check.outputs.ok == 'true' && 'ok' || 'failed' }}"
-          STATUS="${{ steps.build_check.outputs.ok == 'true' && steps.live_check.outputs.ok == 'true' && 'success' || 'failed' }}"
-          echo "{\"date\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\"status\":\"$STATUS\",\"build\":\"$BUILD\",\"live\":\"$LIVE\",\"comments\":${{ steps.check.outputs.count }}}" >> state/logs/executions.jsonl
+          QA="${{ steps.qa_check.outcome == 'success' && 'ok' || 'failed' }}"
+          STATUS="${{ steps.build_check.outputs.ok == 'true' && steps.qa_check.outcome == 'success' && 'success' || 'failed' }}"
+          echo "{\"date\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\"status\":\"$STATUS\",\"build\":\"$BUILD\",\"qa\":\"$QA\",\"comments\":${{ steps.check.outputs.count }}}" >> state/logs/executions.jsonl
           git config user.name "buildinpublic-bot"
           git config user.email "bot@buildinpublic.jp"
           git add state/logs/
