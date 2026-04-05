@@ -1,1 +1,127 @@
-/**\n * brain.ts - AIブレイン\n * コメントを読んで100案生成・スコアリング・1案決定・プラン出力\n * GitHub ActionsのCCが実行する前にこれを走らせる\n */\n\nimport Anthropic from '@anthropic-ai/sdk'\nimport { readFileSync, writeFileSync, mkdirSync } from 'fs'\nimport { join } from 'path'\n\nconst client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })\n\nasync function main() {\n  const stateDir = join(process.cwd(), 'state')\n  const commentsPath = join(stateDir, 'comments.json')\n  const currentVersionPath = join(stateDir, 'current_version.json')\n  const nextPlanPath = join(stateDir, 'next_plan.md')\n\n  const rawComments = readFileSync(commentsPath, 'utf-8')\n  const comments: { body: string; id: string }[] = JSON.parse(rawComments)\n  const currentVersion: { number: number; description: string } = JSON.parse(\n    readFileSync(currentVersionPath, 'utf-8')\n  )\n\n  if (comments.length === 0) {\n    console.log('コメントなし。スキップ。')\n    process.exit(0)\n  }\n\n  console.log(`コメント${comments.length}件を分析中...`)\n  console.log(`現在: v${currentVersion.number} - ${currentVersion.description}`)\n\n  const response = await client.messages.create({\n    model: 'claude-opus-4-6',\n    max_tokens: 16000,\n    thinking: { type: 'enabled', budget_tokens: 10000 } as any,\n    messages: [\n      {\n        role: 'user',\n        content: `あなたはbuildinpublic.jpというWebサイトの進化を管理するAIです。\n\n## 現在の状態\nバージョン: v${currentVersion.number}\n説明: ${currentVersion.description}\n\n## 集まったコメント\n${comments.map((c, i) => `${i + 1}. ${c.body}`).join('\\n')}\n\n## あなたのタスク\n\n1. これらのコメントから100個の「サイトの進化の方向性」を内部的に生成する\n2. それぞれに1-100のスコアをつける（動画コンテンツとして面白いか、実装が30分以内か、視聴者が驚くか、前バージョンとのギャップが大きいか）\n3. 最高スコアの1案に決め込む\n4. その案を実装するための完全なプランをMarkdownで書く\n\n## 重要なルール\n- コメントは必ず「拡大解釈」する。文字通りに取らない\n- 突拍子もない方向性ほど動画として面白い\n- プランはNext.js + Tailwind CSSで実装可能なものに限る\n- app/page.tsxを書き換えることでサイトが変わる\n\n## 出力フォーマット（このフォーマットで必ず出力）\n\n### 採用案\n- コメント: （どのコメントを採用したか）\n- 拡大解釈: （どう解釈したか）\n- スコア: （何点 / 100）\n- 判断理由: （なぜこれを選んだか）\n\n### 実装プラン\n（app/page.tsxに何をどう書くか、具体的なコードレベルで指示）\n\n### 特記事項\n（CCエージェントへの追加指示があれば）\n`,\n      },\n    ],\n  })\n\n  const planText = response.content\n    .filter((b) => b.type === 'text')\n    .map((b) => (b as { type: 'text'; text: string }).text)\n    .join('\\n')\n\n  mkdirSync(stateDir, { recursive: true })\n  writeFileSync(nextPlanPath, `# Next Plan\\n生成日時: ${new Date().toISOString()}\\n\\n${planText}`)\n\n  // バージョン記録\n  const nextNum = currentVersion.number + 1\n  const versionNum = String(nextNum).padStart(3, '0')\n  const versionsDir = join(stateDir, 'versions')\n  mkdirSync(versionsDir, { recursive: true })\n\n  // 採用コメントを簡易パース\n  const commentMatch = planText.match(/コメント[：:] ?(.+)/)\n  const adoptedComment = commentMatch ? commentMatch[1].trim() : comments[0].body\n  const reasonMatch = planText.match(/判断理由[：:] ?(.+)/)\n  const reason = reasonMatch ? reasonMatch[1].trim() : planText.slice(0, 200)\n  const scoreMatch = planText.match(/(\\d+) ?\\/? ?100/)\n  const score = scoreMatch ? parseInt(scoreMatch[1]) : 0\n\n  writeFileSync(\n    join(versionsDir, `v${versionNum}.json`),\n    JSON.stringify(\n      {\n        number: `v${versionNum}`,\n        comment: adoptedComment,\n        reason,\n        score,\n        date: new Date().toLocaleDateString('ja-JP'),\n        plan: planText,\n      },\n      null,\n      2\n    )\n  )\n\n  writeFileSync(\n    currentVersionPath,\n    JSON.stringify(\n      {\n        number: nextNum,\n        description: `コメント「${adoptedComment.slice(0, 30)}」から進化`,\n        last_updated: new Date().toISOString(),\n      },\n      null,\n      2\n    )\n  )\n\n  console.log(`✅ プラン生成完了 → state/next_plan.md`)\n  console.log(`✅ バージョン記録 → state/versions/v${versionNum}.json`)\n}\n\nmain().catch(console.error)\n
+import Anthropic from '@anthropic-ai/sdk'
+import { readFileSync, writeFileSync, mkdirSync } from 'fs'
+import { join } from 'path'
+
+const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+
+async function main() {
+  const stateDir = join(process.cwd(), 'state')
+  const commentsPath = join(stateDir, 'comments.json')
+  const currentVersionPath = join(stateDir, 'current_version.json')
+  const nextPlanPath = join(stateDir, 'next_plan.md')
+
+  const rawComments = readFileSync(commentsPath, 'utf-8')
+  const comments: { body: string; id: string }[] = JSON.parse(rawComments)
+  const currentVersion: { number: number; description: string } = JSON.parse(
+    readFileSync(currentVersionPath, 'utf-8')
+  )
+
+  if (comments.length === 0) {
+    console.log('コメントなし。スキップ。')
+    process.exit(0)
+  }
+
+  console.log(`コメント${comments.length}件を分析中...`)
+  console.log(`現在: v${currentVersion.number} - ${currentVersion.description}`)
+
+  const response = await client.messages.create({
+    model: 'claude-opus-4-6',
+    max_tokens: 16000,
+    thinking: { type: 'enabled', budget_tokens: 10000 } as any,
+    messages: [
+      {
+        role: 'user',
+        content: `あなたはbuildinpublic.jpというWebサイトの進化を管理するAIです。
+
+## 現在の状態
+バージョン: v${currentVersion.number}
+説明: ${currentVersion.description}
+
+## 集まったコメント
+${comments.map((c, i) => `${i + 1}. ${c.body}`).join('\n')}
+
+## あなたのタスク
+
+1. これらのコメントから100個の「サイトの進化の方向性」を内部的に生成する
+2. それぞれに1-100のスコアをつける（動画コンテンツとして面白いか、実装が30分以内か、視聴者が驚くか、前バージョンとのギャップが大きいか）
+3. 最高スコアの1案に決め込む
+4. その案を実装するための完全なプランをMarkdownで書く
+
+## 重要なルール
+- コメントは必ず「拡大解釈」する。文字通りに取らない
+- 突拍子もない方向性ほど動画として面白い
+- プランはNext.js + Tailwind CSSで実装可能なものに限る
+- app/page.tsxを書き換えることでサイトが変わる
+
+## 出力フォーマット（このフォーマットで必ず出力）
+
+### 採用案
+- コメント: （どのコメントを採用したか）
+- 拡大解釈: （どう解釈したか）
+- スコア: （何点 / 100）
+- 判断理由: （なぜこれを選んだか）
+
+### 実装プラン
+（app/page.tsxに何をどう書くか、具体的なコードレベルで指示）
+
+### 特記事項
+（CCエージェントへの追加指示があれば）
+`,
+      },
+    ],
+  })
+
+  const planText = response.content
+    .filter((b) => b.type === 'text')
+    .map((b) => (b as { type: 'text'; text: string }).text)
+    .join('\n')
+
+  mkdirSync(stateDir, { recursive: true })
+  writeFileSync(nextPlanPath, `# Next Plan\n生成日時: ${new Date().toISOString()}\n\n${planText}`)
+
+  const nextNum = currentVersion.number + 1
+  const versionNum = String(nextNum).padStart(3, '0')
+  const versionsDir = join(stateDir, 'versions')
+  mkdirSync(versionsDir, { recursive: true })
+
+  const commentMatch = planText.match(/コメント[：:] ?(.+)/)
+  const adoptedComment = commentMatch ? commentMatch[1].trim() : comments[0].body
+  const reasonMatch = planText.match(/判断理由[：:] ?(.+)/)
+  const reason = reasonMatch ? reasonMatch[1].trim() : planText.slice(0, 200)
+  const scoreMatch = planText.match(/(\d+) ?\/? ?100/)
+  const score = scoreMatch ? parseInt(scoreMatch[1]) : 0
+
+  writeFileSync(
+    join(versionsDir, `v${versionNum}.json`),
+    JSON.stringify(
+      {
+        number: `v${versionNum}`,
+        comment: adoptedComment,
+        reason,
+        score,
+        date: new Date().toLocaleDateString('ja-JP'),
+        plan: planText,
+      },
+      null,
+      2
+    )
+  )
+
+  writeFileSync(
+    currentVersionPath,
+    JSON.stringify(
+      {
+        number: nextNum,
+        description: `コメント「${adoptedComment.slice(0, 30)}」から進化`,
+        last_updated: new Date().toISOString(),
+      },
+      null,
+      2
+    )
+  )
+
+  console.log(`✅ プラン生成完了 → state/next_plan.md`)
+  console.log(`✅ バージョン記録 → state/versions/v${versionNum}.json`)
+}
+
+main().catch(console.error)
