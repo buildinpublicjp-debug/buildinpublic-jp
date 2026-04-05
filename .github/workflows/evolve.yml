@@ -1,1 +1,149 @@
-name: Evolve buildinpublic.jp\n\non:\n  schedule:\n    - cron: '0 17 * * *'  # 毎日深夜2時JST (UTC 17:00)\n  workflow_dispatch:        # 手動発火も可能\n\njobs:\n  evolve:\n    runs-on: ubuntu-latest\n    permissions:\n      contents: write\n\n    steps:\n      - name: Checkout\n        uses: actions/checkout@v4\n        with:\n          token: ${{ secrets.GITHUB_TOKEN }}\n\n      - name: Setup Node.js\n        uses: actions/setup-node@v4\n        with:\n          node-version: '20'\n          cache: 'npm'\n\n      - name: Install dependencies\n        run: npm install\n\n      # Step 1: Supabaseからコメントを取得\n      - name: Fetch comments from Supabase\n        env:\n          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}\n          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}\n        run: |\n          node -e \"\n            const { createClient } = require('@supabase/supabase-js');\n            const fs = require('fs');\n            const sb = createClient(\n              process.env.NEXT_PUBLIC_SUPABASE_URL,\n              process.env.SUPABASE_SERVICE_KEY\n            );\n            sb.from('comments')\n              .select('*')\n              .eq('used', false)\n              .order('created_at', { ascending: true })\n              .then(({ data, error }) => {\n                if (error) { console.error(error); process.exit(1); }\n                if (!data || data.length === 0) {\n                  console.log('コメントなし - スキップ');\n                  fs.writeFileSync('state/comments.json', '[]');\n                } else {\n                  fs.writeFileSync('state/comments.json', JSON.stringify(data, null, 2));\n                  console.log(data.length + '件取得');\n                }\n              });\n          \"\n\n      # コメントがなければ終了\n      - name: Check if comments exist\n        id: check\n        run: |\n          COUNT=$(node -e \"const d=require('./state/comments.json'); console.log(d.length)\")\n          echo \"count=$COUNT\" >> $GITHUB_OUTPUT\n          if [ \"$COUNT\" = \"0\" ]; then\n            echo \"コメントなし。終了。\"\n          fi\n\n      # Step 2: brainスクリプト実行 → next_plan.md生成\n      - name: Run brain (AI decision engine)\n        if: steps.check.outputs.count != '0'\n        env:\n          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}\n        run: npx ts-node --skipProject -O '{\"module\":\"commonjs\"}' scripts/brain.ts\n\n      # Step 3: CCがnext_plan.mdを読んでapp/page.tsxを書き換える\n      - name: Claude Code rewrites the site\n        if: steps.check.outputs.count != '0'\n        uses: anthropics/claude-code-action@v1\n        with:\n          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}\n          claude_args: \"--dangerously-skip-permissions\"\n          prompt: |\n            state/next_plan.md を読んで、その指示に従って app/page.tsx を完全に書き換えてください。\n\n            必須ルール:\n            1. app/page.tsx のみを変更する\n            2. Next.js 14 App Router + Tailwind CSS で実装\n            3. フォーム（コメント送信）は必ず残す\n            4. /versions へのリンクは必ず残す\n            5. ファイル冒頭のコメントに「// v{バージョン番号} - {採用コメント}」を書く\n            6. 実装完了後: git add app/page.tsx state/ && git commit -m \"evolve: $(cat state/current_version.json | node -e \"const d=JSON.parse(require('fs').readFileSync('/dev/stdin','utf-8')); console.log('v'+d.number)\" 2>/dev/null || echo 'next')\" && git push\n\n      # Step 4: 使用済みコメントをSupabaseで更新\n      - name: Mark comments as used\n        if: steps.check.outputs.count != '0'\n        env:\n          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}\n          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}\n        run: |\n          node -e \"\n            const { createClient } = require('@supabase/supabase-js');\n            const fs = require('fs');\n            const sb = createClient(\n              process.env.NEXT_PUBLIC_SUPABASE_URL,\n              process.env.SUPABASE_SERVICE_KEY\n            );\n            const comments = JSON.parse(fs.readFileSync('state/comments.json', 'utf-8'));\n            const ids = comments.map(c => c.id);\n            if (ids.length === 0) { console.log('なし'); process.exit(0); }\n            sb.from('comments')\n              .update({ used: true })\n              .in('id', ids)\n              .then(({ error }) => {\n                if (error) console.error(error);\n                else console.log(ids.length + '件を使用済みに更新');\n              });\n          \"\n
+name: Evolve buildinpublic.jp
+
+on:
+  schedule:
+    - cron: '0 17 * * *'  # 毎日深夜2時JST (UTC 17:00)
+  workflow_dispatch:
+
+jobs:
+  evolve:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install
+
+      # ── GUIDE: コメント取得（事前コンテキスト準備）──
+      - name: Fetch comments from Supabase
+        id: fetch
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: |
+          node -e "
+            const { createClient } = require('@supabase/supabase-js');
+            const fs = require('fs');
+            const sb = createClient(
+              process.env.NEXT_PUBLIC_SUPABASE_URL,
+              process.env.SUPABASE_SERVICE_KEY
+            );
+            sb.from('comments')
+              .select('*')
+              .eq('used', false)
+              .order('created_at', { ascending: true })
+              .then(({ data, error }) => {
+                if (error) { console.error(error); process.exit(1); }
+                if (!data || data.length === 0) {
+                  console.log('コメントなし - スキップ');
+                  fs.writeFileSync('state/comments.json', '[]');
+                } else {
+                  fs.writeFileSync('state/comments.json', JSON.stringify(data, null, 2));
+                  console.log(data.length + '件取得');
+                }
+              });
+          "
+
+      - name: Check if comments exist
+        id: check
+        run: |
+          COUNT=$(node -e "const d=require('./state/comments.json'); console.log(d.length)")
+          echo "count=$COUNT" >> $GITHUB_OUTPUT
+
+      # ── GUIDE: AIブレイン（拡大解釈・スコアリング・プラン生成）──
+      - name: Run brain (AI decision engine)
+        if: steps.check.outputs.count != '0'
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: npx ts-node --skipProject -O '{"module":"commonjs"}' scripts/brain.ts
+
+      # ── EXECUTE: CCがプランを読んでサイトを書き換える ──
+      - name: Claude Code rewrites the site
+        if: steps.check.outputs.count != '0'
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          claude_args: "--dangerously-skip-permissions"
+          prompt: |
+            CLAUDE.md を必ず最初に読んでください。
+
+            その後、state/next_plan.md を読んで app/page.tsx を完全に書き換えてください。
+
+            完了後:
+            git config user.name "buildinpublic-bot"
+            git config user.email "bot@buildinpublic.jp"
+            git add app/page.tsx state/
+            git commit -m "evolve: $(node -e "const v=require('./state/current_version.json'); console.log('v'+v.number)")"
+            git push
+
+      # ── SENSOR: ビルド検証（書き換え後に実際にビルドが通るか確認）──
+      - name: Verify build (sensor)
+        if: steps.check.outputs.count != '0'
+        id: verify
+        run: |
+          git pull
+          npm run build
+          echo "build_ok=true" >> $GITHUB_OUTPUT
+        continue-on-error: true
+
+      # ── SENSOR: ビルド失敗時はrevertして記録 ──
+      - name: Revert if build failed
+        if: steps.check.outputs.count != '0' && steps.verify.outputs.build_ok != 'true'
+        run: |
+          echo "⚠️ ビルド失敗 - revertします"
+          git revert HEAD --no-edit
+          git push
+          # 失敗ログを記録
+          mkdir -p state/logs
+          echo "{\"date\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\"status\":\"build_failed\",\"version\":$(cat state/current_version.json)}" >> state/logs/failures.jsonl
+
+      # ── SENSOR: 使用済みコメントをマーク（成功時のみ）──
+      - name: Mark comments as used
+        if: steps.check.outputs.count != '0' && steps.verify.outputs.build_ok == 'true'
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: |
+          node -e "
+            const { createClient } = require('@supabase/supabase-js');
+            const fs = require('fs');
+            const sb = createClient(
+              process.env.NEXT_PUBLIC_SUPABASE_URL,
+              process.env.SUPABASE_SERVICE_KEY
+            );
+            const comments = JSON.parse(fs.readFileSync('state/comments.json', 'utf-8'));
+            const ids = comments.map(c => c.id);
+            if (ids.length === 0) { process.exit(0); }
+            sb.from('comments')
+              .update({ used: true })
+              .in('id', ids)
+              .then(({ error }) => {
+                if (error) console.error(error);
+                else console.log(ids.length + '件を使用済みに更新');
+              });
+          "
+
+      # ── OBSERVABILITY: 実行ログを記録 ──
+      - name: Log execution result
+        if: steps.check.outputs.count != '0'
+        run: |
+          mkdir -p state/logs
+          STATUS="${{ steps.verify.outputs.build_ok == 'true' && 'success' || 'failed' }}"
+          echo "{\"date\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\"status\":\"$STATUS\",\"comments_count\":${{ steps.check.outputs.count }}}" >> state/logs/executions.jsonl
+          git config user.name "buildinpublic-bot"
+          git config user.email "bot@buildinpublic.jp"
+          git add state/logs/
+          git diff --staged --quiet || git commit -m "log: execution $(date -u +%Y-%m-%d)"
+          git push
