@@ -40,25 +40,13 @@ jobs:
               process.env.NEXT_PUBLIC_SUPABASE_URL,
               process.env.SUPABASE_SERVICE_KEY
             );
-
-            // 未使用コメント（今回処理するもの）
-            const newP = sb.from('comments')
-              .select('*')
-              .eq('used', false)
-              .order('created_at', { ascending: true });
-
-            // 全コメント履歴（used含む・コミュニティの総意を読むため）
-            const allP = sb.from('comments')
-              .select('*')
-              .order('created_at', { ascending: true });
-
+            const newP = sb.from('comments').select('*').eq('used', false).order('created_at', { ascending: true });
+            const allP = sb.from('comments').select('*').order('created_at', { ascending: true });
             Promise.all([newP, allP]).then(([newRes, allRes]) => {
               if (newRes.error) { console.error(newRes.error); process.exit(1); }
               if (allRes.error) { console.error(allRes.error); process.exit(1); }
-
               const newData = newRes.data || [];
               const allData = allRes.data || [];
-
               if (newData.length === 0) {
                 console.log('新規コメントなし - スキップ');
                 fs.writeFileSync('state/comments.json', '[]');
@@ -66,7 +54,6 @@ jobs:
                 fs.writeFileSync('state/comments.json', JSON.stringify(newData, null, 2));
                 console.log('新規: ' + newData.length + '件');
               }
-
               fs.writeFileSync('state/all_comments.json', JSON.stringify(allData, null, 2));
               console.log('全履歴: ' + allData.length + '件');
             });
@@ -78,7 +65,7 @@ jobs:
           COUNT=$(node -e "const d=require('./state/comments.json'); console.log(d.length)")
           echo "count=$COUNT" >> $GITHUB_OUTPUT
 
-      # ── GUIDE: AIブレイン（全コメントの総意を読む）──
+      # ── GUIDE: AIブレイン ──
       - name: Run brain (AI decision engine)
         if: steps.check.outputs.count != '0'
         env:
@@ -113,11 +100,11 @@ jobs:
           echo "ok=true" >> $GITHUB_OUTPUT
         continue-on-error: true
 
-      # ── SENSOR 2: インテリジェントQAサブエージェント ──
-      - name: Install Playwright
+      # ── SENSOR 2: Playwright MCP + CCサブエージェントによる本番検証 ──
+      - name: Install Playwright MCP
         if: steps.check.outputs.count != '0' && steps.build_check.outputs.ok == 'true'
         run: |
-          npm install -D @playwright/test
+          npm install -D @playwright/mcp
           npx playwright install chromium --with-deps
 
       - name: Wait for Vercel deploy
@@ -126,50 +113,77 @@ jobs:
           echo "Vercelのデプロイ完了を待機中（2分）..."
           sleep 120
 
-      - name: Sensor 2 - Intelligent QA subagent
+      # CCサブエージェントがPlaywright MCPツールを直接呼び出して実際のブラウザ操作を行う
+      - name: Sensor 2 - CC QA subagent with Playwright MCP
         if: steps.check.outputs.count != '0' && steps.build_check.outputs.ok == 'true'
         id: qa_check
         uses: anthropics/claude-code-action@v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           claude_args: "--dangerously-skip-permissions"
+          mcp_config: |
+            {
+              "mcpServers": {
+                "playwright": {
+                  "command": "npx",
+                  "args": ["@playwright/mcp", "--headless", "--viewport-size", "390,844"]
+                }
+              }
+            }
           prompt: |
-            あなたはインテリジェントQAサブエージェントです。
-            今回実装されたものを「実際に動くか」まで検証してください。
+            あなたはQAサブエージェントです。
+            Playwright MCPツールを使って、buildinpublic.jp を実際にブラウザで操作し検証してください。
 
-            ## 手順
+            ## 事前確認
+            まず以下を読んで今回何が実装されたか把握する:
+            - state/next_plan.md（今回の方向性）
+            - app/page.tsx（実際のコード）
 
-            ### 1. 今回何が実装されたかを理解する
-            以下を読んでください:
-            - state/next_plan.md（今回のAIプラン）
-            - app/page.tsx（実際に書かれたコード）
-            - state/current_version.json（バージョン情報）
+            ## 検証手順（Playwright MCPツールで実行）
 
-            ### 2. 実装内容に合わせたPlaywrightテストを自分で書く
-            scripts/qa-dynamic.ts として今回の実装に特化したテストを作成してください。
+            ### Step 1: ページを開く
+            browser_navigate で https://buildinpublic.jp を開く
+            browser_screenshot でスクリーンショットを撮る → state/logs/qa_01_initial.png に保存
 
-            テストで必ずカバーすること:
-            - ページが正常に読み込まれるか（iPhone 14 Proのviewport）
-            - 今回実装した主要機能が実際に動くか（ゲームならプレイ、ボタンなら押す、アニメーションなら動くか等）
-            - コメント送信フォームが機能するか（タップして入力して送信）
-            - /versionsページに遷移できるか
-            - コンソールエラーが出ていないか
+            ### Step 2: 今回実装された機能を実際に動かす
+            page.tsxのコードを読んで今回何が実装されたかを理解し、
+            その機能を実際にbrowser_clickやbrowser_typeで操作する。
+            例:
+            - ゲームなら実際にプレイする（ボタンを押す、スコアが変わるか確認）
+            - アニメーションなら動いているか確認
+            - インタラクティブな要素なら全部触ってみる
+            各ステップでbrowser_screenshotを撮る
 
-            ### 3. テストを実行する
-            npx ts-node --skipProject -O '{"module":"commonjs"}' scripts/qa-dynamic.ts
+            ### Step 3: フォームを実際に操作する
+            1. テキストエリアを browser_click でタップ
+            2. browser_type で「QAテスト」と入力
+            3. 送信ボタンを browser_click でタップ
+            4. 送信後の状態をbrowser_screenshotで撮る → state/logs/qa_03_submitted.png
 
-            ### 4. 各ステップでスクリーンショットを state/logs/ に保存する
+            ### Step 4: /versions ページに遷移する
+            バージョン履歴リンクを browser_click でタップ
+            遷移後のURLをbrowser_navigateで確認
+            browser_screenshot → state/logs/qa_04_versions.png
 
-            ### 5. state/logs/qa_result.json に結果を保存する
+            ### Step 5: 結果を記録する
+            以下の形式で state/logs/qa_result.json に保存:
+            {
+              "date": "ISO日時",
+              "version": "バージョン番号",
+              "implemented": "今回実装したものの一言説明",
+              "all_ok": true/false,
+              "steps": [{"step": "説明", "ok": true/false, "detail": "詳細"}]
+            }
 
-            ### 6. all_ok=true なら以下を実行:
+            ### Step 6: 成功なら commit
+            all_ok=true なら:
             git config user.name "buildinpublic-bot"
             git config user.email "bot@buildinpublic.jp"
-            git add state/logs/ scripts/qa-dynamic.ts
+            git add state/logs/
             git diff --staged --quiet || git commit -m "qa: passed"
             git push
 
-            all_ok=false なら失敗ステップを出力してexit 1
+            all_ok=false なら失敗内容を詳しく出力してexit 1
 
       # ── SENSOR: 検証失敗時はrevert ──
       - name: Revert if QA failed
