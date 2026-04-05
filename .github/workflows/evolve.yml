@@ -26,7 +26,7 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      # ── GUIDE: コメント取得 ──
+      # ── GUIDE: コメント取得（未使用 + 全履歴）──
       - name: Fetch comments from Supabase
         id: fetch
         env:
@@ -40,20 +40,36 @@ jobs:
               process.env.NEXT_PUBLIC_SUPABASE_URL,
               process.env.SUPABASE_SERVICE_KEY
             );
-            sb.from('comments')
+
+            // 未使用コメント（今回処理するもの）
+            const newP = sb.from('comments')
               .select('*')
               .eq('used', false)
-              .order('created_at', { ascending: true })
-              .then(({ data, error }) => {
-                if (error) { console.error(error); process.exit(1); }
-                if (!data || data.length === 0) {
-                  console.log('コメントなし - スキップ');
-                  fs.writeFileSync('state/comments.json', '[]');
-                } else {
-                  fs.writeFileSync('state/comments.json', JSON.stringify(data, null, 2));
-                  console.log(data.length + '件取得');
-                }
-              });
+              .order('created_at', { ascending: true });
+
+            // 全コメント履歴（used含む・コミュニティの総意を読むため）
+            const allP = sb.from('comments')
+              .select('*')
+              .order('created_at', { ascending: true });
+
+            Promise.all([newP, allP]).then(([newRes, allRes]) => {
+              if (newRes.error) { console.error(newRes.error); process.exit(1); }
+              if (allRes.error) { console.error(allRes.error); process.exit(1); }
+
+              const newData = newRes.data || [];
+              const allData = allRes.data || [];
+
+              if (newData.length === 0) {
+                console.log('新規コメントなし - スキップ');
+                fs.writeFileSync('state/comments.json', '[]');
+              } else {
+                fs.writeFileSync('state/comments.json', JSON.stringify(newData, null, 2));
+                console.log('新規: ' + newData.length + '件');
+              }
+
+              fs.writeFileSync('state/all_comments.json', JSON.stringify(allData, null, 2));
+              console.log('全履歴: ' + allData.length + '件');
+            });
           "
 
       - name: Check if comments exist
@@ -62,7 +78,7 @@ jobs:
           COUNT=$(node -e "const d=require('./state/comments.json'); console.log(d.length)")
           echo "count=$COUNT" >> $GITHUB_OUTPUT
 
-      # ── GUIDE: AIブレイン ──
+      # ── GUIDE: AIブレイン（全コメントの総意を読む）──
       - name: Run brain (AI decision engine)
         if: steps.check.outputs.count != '0'
         env:
@@ -130,61 +146,30 @@ jobs:
             - state/current_version.json（バージョン情報）
 
             ### 2. 実装内容に合わせたPlaywrightテストを自分で書く
-            以下のテンプレートを参考に、今回の実装に特化したテストを
-            scripts/qa-dynamic.ts として自分で作成してください。
+            scripts/qa-dynamic.ts として今回の実装に特化したテストを作成してください。
 
             テストで必ずカバーすること:
-            - ページが正常に読み込まれるか
-            - 今回実装した主要機能が実際に動くか（ゲームならプレイできるか、ボタンなら押せるか、アニメーションなら動くか等）
-            - コメント送信フォームが機能するか（実際にタップして入力して送信する）
+            - ページが正常に読み込まれるか（iPhone 14 Proのviewport）
+            - 今回実装した主要機能が実際に動くか（ゲームならプレイ、ボタンなら押す、アニメーションなら動くか等）
+            - コメント送信フォームが機能するか（タップして入力して送信）
             - /versionsページに遷移できるか
-            - エラーが発生していないか（コンソールエラーを確認）
+            - コンソールエラーが出ていないか
 
-            Playwright使用例:
-            ```typescript
-            import { chromium, devices } from '@playwright/test'
-            // iPhone 14 Proのviewportで実行
-            const browser = await chromium.launch({ headless: true })
-            const context = await browser.newContext({ ...devices['iPhone 14 Pro'] })
-            const page = await context.newPage()
-            // コンソールエラーを収集
-            const errors: string[] = []
-            page.on('console', msg => { if (msg.type() === 'error') errors.push(msg.text()) })
-            ```
-
-            ### 3. 作成したテストを実行する
-            ```
+            ### 3. テストを実行する
             npx ts-node --skipProject -O '{"module":"commonjs"}' scripts/qa-dynamic.ts
-            ```
 
-            ### 4. スクリーンショットを保存する
-            - テストの各ステップでスクリーンショットを state/logs/ に保存すること
-            - ファイル名は qa_{step番号}_{説明}.png の形式
+            ### 4. 各ステップでスクリーンショットを state/logs/ に保存する
 
-            ### 5. 結果をJSONに保存して判定する
-            state/logs/qa_result.json に以下の形式で保存:
-            ```json
-            {
-              "date": "ISO日時",
-              "version": "v番号",
-              "implemented": "今回実装したものの説明",
-              "all_ok": true/false,
-              "steps": [{"step": "説明", "ok": true/false, "detail": "詳細"}]
-            }
-            ```
+            ### 5. state/logs/qa_result.json に結果を保存する
 
-            ### 6. 結果に基づいて行動する
-            all_ok = true の場合:
-              git config user.name "buildinpublic-bot"
-              git config user.email "bot@buildinpublic.jp"
-              git add state/logs/ scripts/qa-dynamic.ts
-              git diff --staged --quiet || git commit -m "qa: passed v$(node -e "console.log(require('./state/current_version.json').number)")"
-              git push
-              echo "✅ QA PASSED"
+            ### 6. all_ok=true なら以下を実行:
+            git config user.name "buildinpublic-bot"
+            git config user.email "bot@buildinpublic.jp"
+            git add state/logs/ scripts/qa-dynamic.ts
+            git diff --staged --quiet || git commit -m "qa: passed"
+            git push
 
-            all_ok = false の場合:
-              失敗したステップと理由を詳しく出力する
-              exit 1
+            all_ok=false なら失敗ステップを出力してexit 1
 
       # ── SENSOR: 検証失敗時はrevert ──
       - name: Revert if QA failed
