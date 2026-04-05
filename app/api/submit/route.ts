@@ -1,1 +1,26 @@
-import { NextRequest, NextResponse } from 'next/server'\nimport { createClient } from '@supabase/supabase-js'\n\nexport async function POST(req: NextRequest) {\n  const { comment } = await req.json()\n\n  if (!comment || comment.trim().length === 0) {\n    return NextResponse.json({ error: 'empty' }, { status: 400 })\n  }\n\n  const supabase = createClient(\n    process.env.NEXT_PUBLIC_SUPABASE_URL!,\n    process.env.SUPABASE_SERVICE_KEY!\n  )\n\n  const { error } = await supabase\n    .from('comments')\n    .insert({ body: comment.trim(), used: false })\n\n  if (error) {\n    console.error('Supabase error:', error)\n    return NextResponse.json({ error: 'db' }, { status: 500 })\n  }\n\n  return NextResponse.json({ ok: true })\n}\n
+import { NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@supabase/supabase-js'
+
+export async function POST(req: NextRequest) {
+  const { comment } = await req.json()
+
+  if (!comment || comment.trim().length === 0) {
+    return NextResponse.json({ error: 'empty' }, { status: 400 })
+  }
+
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_KEY!
+  )
+
+  const { error } = await supabase
+    .from('comments')
+    .insert({ body: comment.trim(), used: false })
+
+  if (error) {
+    console.error('Supabase error:', error)
+    return NextResponse.json({ error: 'db' }, { status: 500 })
+  }
+
+  return NextResponse.json({ ok: true })
+}
