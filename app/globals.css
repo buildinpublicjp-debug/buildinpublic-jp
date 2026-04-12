@@ -84,3 +84,92 @@
 .text-glow-blue {
   text-shadow: 0 0 8px rgba(0, 191, 255, 0.6), 0 0 20px rgba(0, 191, 255, 0.3);
 }
+
+/* ============================
+   ローディングアニメーション
+   ============================ */
+
+.loading-container {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, #050508 0%, #0A0A14 40%, #1A1A2E 100%);
+  z-index: 50;
+}
+
+.loading-building-svg {
+  width: 160px;
+  height: 160px;
+  filter: drop-shadow(0 0 20px rgba(160, 210, 219, 0.15));
+}
+
+.loading-text {
+  color: rgba(160, 210, 219, 0.6);
+  font-size: 10px;
+  letter-spacing: 4px;
+  font-family: monospace;
+  margin-top: 16px;
+  animation: loadingTextPulse 2s ease-in-out infinite;
+}
+
+.loading-subtext {
+  color: rgba(255, 105, 180, 0.4);
+  font-size: 8px;
+  letter-spacing: 3px;
+  font-family: monospace;
+  margin-top: 8px;
+}
+
+.loading-progress-track {
+  width: 120px;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 1px;
+  overflow: hidden;
+  margin-top: 20px;
+}
+
+.loading-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #FF69B4, #A0D2DB);
+  border-radius: 1px;
+  transition: width 0.5s ease-out;
+}
+
+.loading-dots {
+  display: flex;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.loading-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  animation: loadingDotBounce 1.2s ease-in-out infinite;
+}
+.loading-dot:nth-child(1) { background: #FF69B4; animation-delay: 0s; }
+.loading-dot:nth-child(2) { background: #FFD700; animation-delay: 0.2s; }
+.loading-dot:nth-child(3) { background: #A0D2DB; animation-delay: 0.4s; }
+
+.loading-fade-out {
+  animation: loadingFadeOut 0.8s ease-out forwards;
+}
+
+@keyframes loadingTextPulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+@keyframes loadingDotBounce {
+  0%, 100% { transform: translateY(0); opacity: 0.4; }
+  50% { transform: translateY(-6px); opacity: 1; }
+}
+
+@keyframes loadingFadeOut {
+  0% { opacity: 1; }
+  100% { opacity: 0; pointer-events: none; }
+}
