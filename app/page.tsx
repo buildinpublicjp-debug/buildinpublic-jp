@@ -37,13 +37,20 @@ function getSlotDistrict(index: number): string {
 }
 
 // Compact emotion bar row
+// Short labels for emotion bars (avoid truncation)
+const EMOTION_SHORT: Record<string, string> = {
+  Desire: '欲望', Anxiety: '不安', Trust: '信頼', Vulnerability: '脆さ',
+  Excitement: '興奮', Tenderness: '柔', Jealousy: '嫉妬', Shame: '恥',
+  Dominance: '支配', Surrender: '従', Nostalgia: '郷愁', Denial: '否認',
+};
+
 function EmotionRow({ label, labelEn, value, color }: { label: string; labelEn: string; value: number; color: string }) {
   return (
-    <div className="flex items-center gap-2">
-      <span className="text-[9px] text-white/40 w-[52px] text-right shrink-0" style={{ fontFamily: "'IBM Plex Mono', monospace" }}>
-        {labelEn}
+    <div className="flex items-center gap-1.5">
+      <span className="text-[8px] text-white/40 w-[28px] text-right shrink-0 whitespace-nowrap" style={{ fontFamily: "'Noto Serif JP', serif" }}>
+        {label.slice(0, 2)}
       </span>
-      <div className="flex-1 h-[3px] bg-white/5 rounded-full overflow-hidden">
+      <div className="flex-1 h-[3px] bg-white/8 rounded-full overflow-hidden">
         <motion.div
           className="h-full rounded-full"
           style={{ backgroundColor: color }}
@@ -52,7 +59,7 @@ function EmotionRow({ label, labelEn, value, color }: { label: string; labelEn: 
           transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
         />
       </div>
-      <span className="text-[8px] text-white/25 w-[20px] text-right" style={{ fontFamily: "'IBM Plex Mono', monospace" }}>
+      <span className="text-[7px] text-white/20 w-[16px] text-right shrink-0" style={{ fontFamily: "'IBM Plex Mono', monospace" }}>
         {value}
       </span>
     </div>
@@ -203,11 +210,18 @@ export default function Home() {
     return playAmbientTone(timeOfDay);
   }, [currentHour, audioStarted]);
 
-  // Get all 10 cross-section couples
-  const couples = usePeopleStore(s => {
-    if (!s.initialized) return [];
-    return s.getCrossSectionCouples();
-  });
+  // Get all 10 cross-section couples (stable selectors to avoid infinite re-render)
+  const relationships = usePeopleStore(s => s.relationships);
+  const people = usePeopleStore(s => s.people);
+  const couples = useMemo(() => {
+    if (!initialized || relationships.length === 0) return [];
+    return CROSS_SECTION_SLOTS.map(slot => {
+      const rel = relationships[slot.coupleIndex % relationships.length];
+      const personA = people.find(p => p.id === rel.personA);
+      const personB = people.find(p => p.id === rel.personB);
+      return { relationship: rel, personA: personA!, personB: personB! };
+    });
+  }, [initialized, relationships, people]);
 
   const currentCouple = couples[coupleIndex] || null;
   const sceneImage = getSceneForSlot(coupleIndex);
@@ -331,9 +345,11 @@ export default function Home() {
         />
       </div>
 
-      {/* === MINIMAP (top-left) === */}
-      <div className="absolute top-3 left-3 z-30 scale-[0.6] origin-top-left opacity-70 hover:opacity-100 transition-opacity">
-        <Minimap />
+      {/* === MINIMAP (top-left, hidden on mobile) === */}
+      <div className="absolute top-3 left-3 z-30 scale-[0.5] origin-top-left opacity-60 hover:opacity-90 transition-opacity pointer-events-auto hidden sm:block">
+        <div className="overflow-hidden rounded-lg" style={{ width: 140, height: 140 }}>
+          <Minimap />
+        </div>
       </div>
 
       {/* === TOP INFO BAR === */}
@@ -437,7 +453,7 @@ export default function Home() {
       </button>
 
       {/* === SITUATION TEXT (center-bottom, above emotion panel) === */}
-      <div className="absolute bottom-[220px] left-0 right-0 z-25 px-8 text-center pointer-events-none">
+      <div className="absolute bottom-[190px] sm:bottom-[220px] left-0 right-0 z-25 px-6 sm:px-8 text-center pointer-events-none">
         <AnimatePresence mode="wait">
           <motion.div
             key={coupleIndex + '-sit'}
@@ -455,37 +471,37 @@ export default function Home() {
 
       {/* === BOTTOM EMOTION PANEL === */}
       <div className="absolute bottom-0 left-0 right-0 z-30">
-        <div className="bg-black/65 backdrop-blur-sm border-t border-white/5 px-4 pt-3 pb-4">
-          {/* Score display */}
+        <div className="bg-black/65 backdrop-blur-sm border-t border-white/5 px-3 sm:px-4 pt-2 sm:pt-3 pb-3 sm:pb-4">
+          {/* Score + Time — single row on mobile */}
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[8px] tracking-[3px] text-white/25" style={{ fontFamily: "'IBM Plex Mono', monospace" }}>
-              FOREPLAY SCORE
-            </span>
-            <span
-              className="text-[14px] font-bold"
-              style={{ color: scoreToColor(avgScore, 1), fontFamily: "'IBM Plex Mono', monospace" }}
-            >
-              {avgScore}
-            </span>
-          </div>
-
-          {/* Hours left */}
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-[8px] tracking-[3px] text-white/20" style={{ fontFamily: "'IBM Plex Mono', monospace" }}>
-              TIME LEFT
-            </span>
-            <span className="text-[10px] text-white/35" style={{ fontFamily: "'IBM Plex Mono', monospace" }}>
-              {currentCouple.personA.hoursUntilSex}h
-            </span>
+            <div className="flex items-center gap-3">
+              <span className="text-[8px] tracking-[2px] text-white/25" style={{ fontFamily: "'IBM Plex Mono', monospace" }}>
+                SCORE
+              </span>
+              <span
+                className="text-[13px] font-bold"
+                style={{ color: scoreToColor(avgScore, 1), fontFamily: "'IBM Plex Mono', monospace" }}
+              >
+                {avgScore}
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-[8px] tracking-[2px] text-white/20" style={{ fontFamily: "'IBM Plex Mono', monospace" }}>
+                LEFT
+              </span>
+              <span className="text-[10px] text-white/35" style={{ fontFamily: "'IBM Plex Mono', monospace" }}>
+                {currentCouple.personA.hoursUntilSex}h
+              </span>
+            </div>
           </div>
 
           {/* 12-axis emotion bars — two columns */}
-          <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+          <div className="grid grid-cols-2 gap-x-3 sm:gap-x-4 gap-y-0.5 sm:gap-y-1">
             {EMOTION_KEYS.map(key => (
               <EmotionRow
                 key={key}
                 label={EMOTION_META[key].label}
-                labelEn={EMOTION_META[key].labelEn.slice(0, 8)}
+                labelEn={EMOTION_META[key].labelEn}
                 value={mergedEmotions[key]}
                 color={EMOTION_META[key].color}
               />

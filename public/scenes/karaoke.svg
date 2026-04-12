@@ -1,36 +1,43 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080">
   <defs>
     <radialGradient id="g1" cx="50%" cy="40%" r="80%">
-      <stop offset="0%" stop-color="#18081e" stop-opacity="1"/>
-      <stop offset="50%" stop-color="#100614" stop-opacity="1"/>
-      <stop offset="100%" stop-color="#050208" stop-opacity="1"/>
+      <stop offset="0%" stop-color="#28102e" stop-opacity="1"/>
+      <stop offset="40%" stop-color="#18081c" stop-opacity="1"/>
+      <stop offset="100%" stop-color="#08040c" stop-opacity="1"/>
     </radialGradient>
-    <radialGradient id="neon1" cx="30%" cy="30%" r="20%">
-      <stop offset="0%" stop-color="#ff00ff" stop-opacity="0.12"/>
+    <radialGradient id="neon1" cx="30%" cy="30%" r="25%">
+      <stop offset="0%" stop-color="#ff00ff" stop-opacity="0.25"/>
       <stop offset="100%" stop-color="#ff00ff" stop-opacity="0"/>
     </radialGradient>
-    <radialGradient id="neon2" cx="70%" cy="40%" r="18%">
-      <stop offset="0%" stop-color="#00ccff" stop-opacity="0.1"/>
+    <radialGradient id="neon2" cx="72%" cy="35%" r="22%">
+      <stop offset="0%" stop-color="#00ccff" stop-opacity="0.22"/>
       <stop offset="100%" stop-color="#00ccff" stop-opacity="0"/>
     </radialGradient>
-    <radialGradient id="neon3" cx="50%" cy="70%" r="25%">
-      <stop offset="0%" stop-color="#ff3366" stop-opacity="0.08"/>
+    <radialGradient id="neon3" cx="50%" cy="65%" r="30%">
+      <stop offset="0%" stop-color="#ff3366" stop-opacity="0.15"/>
       <stop offset="100%" stop-color="#ff3366" stop-opacity="0"/>
     </radialGradient>
     <filter id="blur1"><feGaussianBlur stdDeviation="40"/></filter>
+    <filter id="blur2"><feGaussianBlur stdDeviation="20"/></filter>
   </defs>
   <rect width="1920" height="1080" fill="url(#g1)"/>
   <rect width="1920" height="1080" fill="url(#neon1)"/>
   <rect width="1920" height="1080" fill="url(#neon2)"/>
   <rect width="1920" height="1080" fill="url(#neon3)"/>
   <!-- Neon bokeh -->
-  <circle cx="500" cy="250" r="70" fill="#ff00ff" opacity="0.06" filter="url(#blur1)"/>
-  <circle cx="1300" cy="350" r="60" fill="#00ccff" opacity="0.05" filter="url(#blur1)"/>
-  <circle cx="900" cy="700" r="80" fill="#ff3366" opacity="0.04" filter="url(#blur1)"/>
-  <circle cx="200" cy="600" r="40" fill="#ffcc00" opacity="0.04" filter="url(#blur1)"/>
+  <circle cx="450" cy="230" r="90" fill="#ff00ff" opacity="0.15" filter="url(#blur1)"/>
+  <circle cx="1350" cy="300" r="80" fill="#00ccff" opacity="0.12" filter="url(#blur1)"/>
+  <circle cx="850" cy="650" r="100" fill="#ff3366" opacity="0.1" filter="url(#blur1)"/>
+  <circle cx="180" cy="550" r="50" fill="#ffcc00" opacity="0.1" filter="url(#blur1)"/>
+  <circle cx="1600" cy="500" r="60" fill="#00ff88" opacity="0.06" filter="url(#blur1)"/>
+  <!-- Small neon spots -->
+  <circle cx="300" cy="350" r="25" fill="#ff44ff" opacity="0.15" filter="url(#blur2)"/>
+  <circle cx="1500" cy="400" r="20" fill="#44ccff" opacity="0.12" filter="url(#blur2)"/>
+  <circle cx="700" cy="300" r="15" fill="#ff6600" opacity="0.1" filter="url(#blur2)"/>
   <!-- Screen glow -->
-  <rect x="600" y="150" width="720" height="400" rx="12" fill="#0a0614" opacity="0.6"/>
-  <rect x="610" y="160" width="700" height="380" rx="8" fill="#1a1030" opacity="0.2"/>
+  <rect x="580" y="130" width="760" height="420" rx="12" fill="#0c0618" opacity="0.5"/>
+  <rect x="590" y="140" width="740" height="400" rx="8" fill="#1c1238" opacity="0.25"/>
+  <circle cx="960" cy="340" r="120" fill="#6644cc" opacity="0.08" filter="url(#blur1)"/>
   <!-- Sofa silhouette -->
-  <rect x="300" y="750" width="1320" height="120" rx="30" fill="#080412" opacity="0.5"/>
+  <rect x="280" y="730" width="1360" height="130" rx="35" fill="#0a0614" opacity="0.45"/>
 </svg>

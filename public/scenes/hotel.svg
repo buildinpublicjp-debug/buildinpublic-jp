@@ -1,30 +1,42 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080">
   <defs>
     <radialGradient id="g1" cx="50%" cy="50%" r="80%">
-      <stop offset="0%" stop-color="#1a0e14" stop-opacity="1"/>
-      <stop offset="50%" stop-color="#0f0810" stop-opacity="1"/>
-      <stop offset="100%" stop-color="#050205" stop-opacity="1"/>
+      <stop offset="0%" stop-color="#2a1520" stop-opacity="1"/>
+      <stop offset="40%" stop-color="#180c18" stop-opacity="1"/>
+      <stop offset="100%" stop-color="#08040a" stop-opacity="1"/>
     </radialGradient>
-    <radialGradient id="warm1" cx="30%" cy="50%" r="25%">
-      <stop offset="0%" stop-color="#ff3366" stop-opacity="0.08"/>
+    <radialGradient id="warm1" cx="35%" cy="50%" r="30%">
+      <stop offset="0%" stop-color="#ff3366" stop-opacity="0.2"/>
       <stop offset="100%" stop-color="#ff3366" stop-opacity="0"/>
     </radialGradient>
-    <radialGradient id="warm2" cx="70%" cy="45%" r="20%">
-      <stop offset="0%" stop-color="#ff6b3d" stop-opacity="0.06"/>
+    <radialGradient id="warm2" cx="65%" cy="40%" r="25%">
+      <stop offset="0%" stop-color="#ff6b3d" stop-opacity="0.15"/>
       <stop offset="100%" stop-color="#ff6b3d" stop-opacity="0"/>
     </radialGradient>
     <filter id="blur1"><feGaussianBlur stdDeviation="50"/></filter>
+    <filter id="blur2"><feGaussianBlur stdDeviation="25"/></filter>
   </defs>
   <rect width="1920" height="1080" fill="url(#g1)"/>
   <rect width="1920" height="1080" fill="url(#warm1)"/>
   <rect width="1920" height="1080" fill="url(#warm2)"/>
-  <!-- Soft warm light -->
-  <circle cx="960" cy="400" r="200" fill="#ff2244" opacity="0.04" filter="url(#blur1)"/>
-  <circle cx="400" cy="600" r="120" fill="#ff6644" opacity="0.03" filter="url(#blur1)"/>
-  <!-- Window light -->
-  <rect x="1300" y="100" width="300" height="500" rx="8" fill="#0a0610" opacity="0.5"/>
-  <rect x="1310" y="110" width="280" height="480" rx="4" fill="#1a1428" opacity="0.15"/>
+  <!-- Soft warm glow -->
+  <circle cx="960" cy="380" r="250" fill="#ff2244" opacity="0.08" filter="url(#blur1)"/>
+  <circle cx="350" cy="550" r="150" fill="#ff6644" opacity="0.07" filter="url(#blur1)"/>
+  <circle cx="1400" cy="500" r="120" fill="#ff4466" opacity="0.06" filter="url(#blur1)"/>
+  <!-- Bedside lamp -->
+  <circle cx="300" cy="400" r="60" fill="#ffaa44" opacity="0.15" filter="url(#blur2)"/>
+  <circle cx="300" cy="400" r="15" fill="#ffcc88" opacity="0.3"/>
+  <!-- Window -->
+  <rect x="1250" y="80" width="350" height="550" rx="8" fill="#0c0818" opacity="0.4"/>
+  <rect x="1260" y="90" width="330" height="530" rx="4" fill="#161030" opacity="0.2"/>
+  <!-- City through window -->
+  <circle cx="1350" cy="380" r="4" fill="#ffcc44" opacity="0.4"/>
+  <circle cx="1420" cy="350" r="3" fill="#ff6644" opacity="0.35"/>
+  <circle cx="1500" cy="400" r="4" fill="#44aaff" opacity="0.3"/>
+  <circle cx="1380" cy="430" r="3" fill="#ffcc44" opacity="0.3"/>
+  <circle cx="1550" cy="370" r="3" fill="#ff4466" opacity="0.25"/>
+  <circle cx="1300" cy="420" r="2" fill="#88ff88" opacity="0.2"/>
   <!-- Bed silhouette -->
-  <ellipse cx="700" cy="800" rx="400" ry="80" fill="#0a0610" opacity="0.4"/>
-  <rect x="350" y="720" width="700" height="20" rx="10" fill="#0f0818" opacity="0.3"/>
+  <ellipse cx="650" cy="780" rx="450" ry="90" fill="#0a0612" opacity="0.4"/>
+  <rect x="250" y="690" width="800" height="25" rx="12" fill="#120a1c" opacity="0.35"/>
 </svg>

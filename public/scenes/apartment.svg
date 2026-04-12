@@ -1,34 +1,48 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080">
   <defs>
-    <radialGradient id="g1" cx="50%" cy="50%" r="80%">
-      <stop offset="0%" stop-color="#0e0e18" stop-opacity="1"/>
-      <stop offset="50%" stop-color="#08081a" stop-opacity="1"/>
-      <stop offset="100%" stop-color="#030308" stop-opacity="1"/>
+    <radialGradient id="g1" cx="45%" cy="50%" r="80%">
+      <stop offset="0%" stop-color="#141428" stop-opacity="1"/>
+      <stop offset="40%" stop-color="#0c0c20" stop-opacity="1"/>
+      <stop offset="100%" stop-color="#040410" stop-opacity="1"/>
     </radialGradient>
-    <radialGradient id="lamp1" cx="25%" cy="40%" r="18%">
-      <stop offset="0%" stop-color="#ffaa44" stop-opacity="0.12"/>
+    <radialGradient id="lamp1" cx="22%" cy="38%" r="22%">
+      <stop offset="0%" stop-color="#ffaa44" stop-opacity="0.25"/>
       <stop offset="100%" stop-color="#ffaa44" stop-opacity="0"/>
     </radialGradient>
-    <radialGradient id="city1" cx="75%" cy="25%" r="20%">
-      <stop offset="0%" stop-color="#4466ff" stop-opacity="0.06"/>
+    <radialGradient id="city1" cx="78%" cy="22%" r="25%">
+      <stop offset="0%" stop-color="#4466ff" stop-opacity="0.12"/>
       <stop offset="100%" stop-color="#4466ff" stop-opacity="0"/>
     </radialGradient>
     <filter id="blur1"><feGaussianBlur stdDeviation="30"/></filter>
+    <filter id="blur2"><feGaussianBlur stdDeviation="15"/></filter>
   </defs>
   <rect width="1920" height="1080" fill="url(#g1)"/>
   <rect width="1920" height="1080" fill="url(#lamp1)"/>
   <rect width="1920" height="1080" fill="url(#city1)"/>
-  <!-- Window with city lights -->
-  <rect x="1200" y="80" width="500" height="600" rx="4" fill="#06061a" opacity="0.5"/>
-  <rect x="1210" y="90" width="480" height="580" rx="2" fill="#0a0a2e" opacity="0.2"/>
-  <!-- Tiny city light dots through window -->
-  <circle cx="1350" cy="400" r="3" fill="#ffcc44" opacity="0.3"/>
-  <circle cx="1420" cy="380" r="2" fill="#ff6644" opacity="0.25"/>
-  <circle cx="1500" cy="420" r="3" fill="#44aaff" opacity="0.2"/>
-  <circle cx="1380" cy="450" r="2" fill="#ffcc44" opacity="0.2"/>
-  <circle cx="1550" cy="390" r="2" fill="#ff4466" opacity="0.15"/>
   <!-- Lamp glow -->
-  <circle cx="400" cy="350" r="100" fill="#ffaa44" opacity="0.06" filter="url(#blur1)"/>
+  <circle cx="380" cy="330" r="120" fill="#ffaa44" opacity="0.12" filter="url(#blur1)"/>
+  <circle cx="380" cy="330" r="40" fill="#ffcc88" opacity="0.15" filter="url(#blur2)"/>
+  <circle cx="380" cy="320" r="12" fill="#ffeedd" opacity="0.35"/>
+  <!-- Window with cityscape -->
+  <rect x="1150" y="60" width="550" height="650" rx="6" fill="#08082a" opacity="0.45"/>
+  <rect x="1160" y="70" width="530" height="630" rx="3" fill="#10103a" opacity="0.2"/>
+  <!-- City light dots through window -->
+  <circle cx="1280" cy="350" r="5" fill="#ffcc44" opacity="0.5"/>
+  <circle cx="1380" cy="320" r="4" fill="#ff6644" opacity="0.4"/>
+  <circle cx="1500" cy="380" r="5" fill="#44aaff" opacity="0.35"/>
+  <circle cx="1330" cy="420" r="3" fill="#ffcc44" opacity="0.3"/>
+  <circle cx="1560" cy="350" r="4" fill="#ff4466" opacity="0.3"/>
+  <circle cx="1240" cy="400" r="3" fill="#88ff88" opacity="0.25"/>
+  <circle cx="1450" cy="280" r="3" fill="#ffaa22" opacity="0.3"/>
+  <circle cx="1600" cy="420" r="2" fill="#ff88ff" opacity="0.2"/>
+  <circle cx="1350" cy="500" r="4" fill="#4488ff" opacity="0.25"/>
+  <circle cx="1220" cy="460" r="3" fill="#ffdd44" opacity="0.2"/>
+  <!-- Night sky through window -->
+  <circle cx="1600" cy="120" r="3" fill="#ffffff" opacity="0.15"/>
+  <circle cx="1450" cy="100" r="2" fill="#ffffff" opacity="0.1"/>
+  <circle cx="1300" cy="130" r="2" fill="#ffffff" opacity="0.12"/>
   <!-- Floor -->
-  <rect x="0" y="780" width="1920" height="300" fill="#060610" opacity="0.4"/>
+  <rect x="0" y="760" width="1920" height="320" fill="#080818" opacity="0.35"/>
+  <!-- Sofa arm -->
+  <rect x="100" y="600" width="350" height="180" rx="20" fill="#0c0c20" opacity="0.35"/>
 </svg>

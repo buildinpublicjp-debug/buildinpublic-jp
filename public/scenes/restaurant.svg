@@ -1,32 +1,41 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080">
   <defs>
     <radialGradient id="g1" cx="50%" cy="40%" r="80%">
-      <stop offset="0%" stop-color="#0e1418" stop-opacity="1"/>
-      <stop offset="50%" stop-color="#08101a" stop-opacity="1"/>
-      <stop offset="100%" stop-color="#030508" stop-opacity="1"/>
+      <stop offset="0%" stop-color="#1a2028" stop-opacity="1"/>
+      <stop offset="40%" stop-color="#101820" stop-opacity="1"/>
+      <stop offset="100%" stop-color="#050a10" stop-opacity="1"/>
     </radialGradient>
-    <radialGradient id="candle1" cx="40%" cy="55%" r="10%">
-      <stop offset="0%" stop-color="#ffbe6b" stop-opacity="0.2"/>
-      <stop offset="50%" stop-color="#ff8c3d" stop-opacity="0.08"/>
+    <radialGradient id="candle1" cx="40%" cy="50%" r="15%">
+      <stop offset="0%" stop-color="#ffbe6b" stop-opacity="0.4"/>
+      <stop offset="50%" stop-color="#ff8c3d" stop-opacity="0.15"/>
       <stop offset="100%" stop-color="#ff8c3d" stop-opacity="0"/>
     </radialGradient>
-    <radialGradient id="candle2" cx="60%" cy="50%" r="8%">
-      <stop offset="0%" stop-color="#ffbe6b" stop-opacity="0.15"/>
+    <radialGradient id="candle2" cx="62%" cy="45%" r="12%">
+      <stop offset="0%" stop-color="#ffbe6b" stop-opacity="0.3"/>
       <stop offset="100%" stop-color="#ff8c3d" stop-opacity="0"/>
     </radialGradient>
     <filter id="blur1"><feGaussianBlur stdDeviation="35"/></filter>
+    <filter id="blur2"><feGaussianBlur stdDeviation="15"/></filter>
   </defs>
   <rect width="1920" height="1080" fill="url(#g1)"/>
   <rect width="1920" height="1080" fill="url(#candle1)"/>
   <rect width="1920" height="1080" fill="url(#candle2)"/>
   <!-- Candle glows -->
-  <circle cx="750" cy="550" r="8" fill="#ffcc66" opacity="0.6"/>
-  <circle cx="750" cy="550" r="60" fill="#ffaa33" opacity="0.08" filter="url(#blur1)"/>
-  <circle cx="1150" cy="520" r="6" fill="#ffcc66" opacity="0.5"/>
-  <circle cx="1150" cy="520" r="50" fill="#ffaa33" opacity="0.06" filter="url(#blur1)"/>
+  <circle cx="730" cy="520" r="10" fill="#ffcc66" opacity="0.7"/>
+  <circle cx="730" cy="520" r="80" fill="#ffaa33" opacity="0.15" filter="url(#blur1)"/>
+  <circle cx="1180" cy="490" r="8" fill="#ffcc66" opacity="0.6"/>
+  <circle cx="1180" cy="490" r="65" fill="#ffaa33" opacity="0.12" filter="url(#blur1)"/>
+  <!-- Ambient warm glow -->
+  <circle cx="960" cy="500" r="300" fill="#ff9944" opacity="0.05" filter="url(#blur1)"/>
   <!-- Table silhouette -->
-  <ellipse cx="960" cy="700" rx="350" ry="40" fill="#060a10" opacity="0.5"/>
-  <!-- Wine glass silhouettes -->
-  <path d="M880 650 L880 690 L870 700 L890 700 Z" fill="#0a1018" opacity="0.3"/>
-  <path d="M1040 640 L1040 680 L1030 690 L1050 690 Z" fill="#0a1018" opacity="0.3"/>
+  <ellipse cx="960" cy="680" rx="380" ry="50" fill="#080e18" opacity="0.45"/>
+  <!-- Wine glasses -->
+  <path d="M860 620 L860 665 L848 675 L872 675 Z" fill="#101a28" opacity="0.35"/>
+  <path d="M1060 610 L1060 655 L1048 665 L1072 665 Z" fill="#101a28" opacity="0.35"/>
+  <!-- Wine glass glint -->
+  <circle cx="860" cy="625" r="12" fill="#ffcc88" opacity="0.06" filter="url(#blur2)"/>
+  <circle cx="1060" cy="615" r="10" fill="#ffcc88" opacity="0.05" filter="url(#blur2)"/>
+  <!-- Background warm lights -->
+  <circle cx="200" cy="200" r="50" fill="#ffaa44" opacity="0.1" filter="url(#blur2)"/>
+  <circle cx="1700" cy="250" r="45" fill="#ffaa44" opacity="0.08" filter="url(#blur2)"/>
 </svg>
