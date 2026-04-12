@@ -7,6 +7,12 @@ type CameraMode = 'god' | 'tps' | 'fps';
 type SwitchPhase = null | 'zoom_out' | 'zoom_in';
 type UIPanel = null | 'profile' | 'scene';
 
+interface FlyTarget {
+  lat: number;
+  lng: number;
+  startTime: number;
+}
+
 interface GameState {
   // Camera
   cameraMode: CameraMode;
@@ -18,6 +24,10 @@ interface GameState {
   selectedPersonId: string | null;
   selectPerson: (id: string | null) => void;
   switchToPerson: (id: string) => void;
+
+  // Fly
+  flyTarget: FlyTarget | null;
+  setFlyTarget: (target: FlyTarget | null) => void;
 
   // UI
   activePanel: UIPanel;
@@ -47,12 +57,19 @@ export const useGameStore = create<GameState>((set, get) => ({
   selectedPersonId: null,
   selectPerson: (id) => set({ selectedPersonId: id, activePanel: id ? 'profile' : null }),
   switchToPerson: (id) => {
-    set({ switchPhase: 'zoom_out' });
-    setTimeout(() => {
-      set({ selectedPersonId: id, switchPhase: 'zoom_in' });
-      setTimeout(() => set({ switchPhase: null }), 2000);
-    }, 1500);
+    const { usePeopleStore } = require('../stores/peopleStore');
+    const person = usePeopleStore.getState().getPersonById(id);
+    if (person) {
+      set({
+        selectedPersonId: id,
+        activePanel: 'profile',
+        flyTarget: { lat: person.lat, lng: person.lng, startTime: Date.now() },
+      });
+    }
   },
+
+  flyTarget: null,
+  setFlyTarget: (target) => set({ flyTarget: target }),
 
   activePanel: null,
   setActivePanel: (panel) => set({ activePanel: panel }),

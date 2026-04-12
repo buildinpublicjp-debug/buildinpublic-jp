@@ -12,8 +12,11 @@ import { Effects } from '../components/viewport/Effects';
 import { TopBar } from '../components/hud/TopBar';
 import { CameraModeSwitch } from '../components/hud/CameraModeSwitch';
 import { PersonCardSwiper } from '../components/hud/PersonCardSwiper';
+import { Minimap } from '../components/hud/Minimap';
 import { ProfilePanel } from '../components/profile/ProfilePanel';
 import { SwitchOverlay } from '../components/switch/SwitchOverlay';
+import SceneOverlay from '../components/scene/SceneOverlay';
+import { TilesLoadingOverlay } from '../components/hud/TilesLoadingOverlay';
 
 export default function Home() {
   const initialize = usePeopleStore(s => s.initialize);
@@ -42,12 +45,12 @@ export default function Home() {
       <Canvas
         shadows={false}
         dpr={[1, 1.5]}
-        gl={{ antialias: true, alpha: false, powerPreference: 'high-performance' }}
-        camera={{ fov: 60, near: 0.1, far: 2000 }}
+        gl={{ antialias: true, alpha: false, powerPreference: 'high-performance', logarithmicDepthBuffer: true }}
+        camera={{ position: [-3956896, 3355644, 3697619], near: 1, far: 1e10, fov: 60 }}
         style={{ position: 'absolute', inset: 0 }}
       >
         <Suspense fallback={null}>
-          <CameraController />
+          {!process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY && <CameraController />}
           <Lighting />
           <CityScene />
           <People />
@@ -58,12 +61,19 @@ export default function Home() {
       {/* HUD Overlay */}
       <div className="absolute inset-0 pointer-events-none z-10">
         <TopBar />
+        <Minimap />
         <CameraModeSwitch />
         <PersonCardSwiper />
       </div>
 
       {/* Profile Panel */}
       {activePanel === 'profile' && <ProfilePanel />}
+
+      {/* Scene Mode (ギャルゲーUI) */}
+      {activePanel === 'scene' && <SceneOverlay />}
+
+      {/* Tiles Loading */}
+      <TilesLoadingOverlay />
 
       {/* GTA Switch Overlay */}
       {switchPhase && <SwitchOverlay />}

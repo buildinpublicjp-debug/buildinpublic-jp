@@ -1,110 +1,99 @@
 'use client';
 
-import { useRef } from 'react';
+import { useRef, useEffect } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useGameStore } from '../../stores/gameStore';
 import { usePeopleStore } from '../../stores/peopleStore';
+// @ts-ignore
+import { WGS84_ELLIPSOID } from '3d-tiles-renderer/three';
 
-// Smooth exponential decay lerp
-function expLerp(current: number, target: number, speed: number, delta: number): number {
-  const t = 1 - Math.exp(-speed * delta);
-  return current + (target - current) * t;
+const _ecef = new THREE.Vector3();
+const _normal = new THREE.Vector3();
+
+const FLY_ALTITUDE = 50;
+const FLY_DURATION = 2000; // ms
+
+function computeFlyPose(lat: number, lng: number, alt: number) {
+  // ECEF position of the surface point
+  WGS84_ELLIPSOID.getCartographicToPosition(
+    lat * THREE.MathUtils.DEG2RAD,
+    lng * THREE.MathUtils.DEG2RAD,
+    0,
+    _ecef,
+  );
+
+  // Surface normal = direction away from Earth center
+  _normal.copy(_ecef).normalize();
+
+  // Camera = surface + normal * altitude
+  const position = new THREE.Vector3(
+    _ecef.x + _normal.x * alt,
+    _ecef.y + _normal.y * alt,
+    _ecef.z + _normal.z * alt,
+  );
+
+  // Look target = the surface point
+  const lookAt = _ecef.clone();
+
+  return { position, lookAt, up: _normal.clone() };
 }
 
 export function CameraController() {
   const { camera } = useThree();
-  const cameraMode = useGameStore(s => s.cameraMode);
-  const switchPhase = useGameStore(s => s.switchPhase);
   const selectedPersonId = useGameStore(s => s.selectedPersonId);
   const getPersonById = usePeopleStore(s => s.getPersonById);
 
-  const lookTarget = useRef(new THREE.Vector3(0, 0, 0));
+  // Fly animation state
+  const flyStartPos = useRef(new THREE.Vector3());
+  const flyStartLook = useRef(new THREE.Vector3());
+  const flyStartUp = useRef(new THREE.Vector3(0, 1, 0));
+  const flyEndPos = useRef(new THREE.Vector3());
+  const flyEndLook = useRef(new THREE.Vector3());
+  const flyEndUp = useRef(new THREE.Vector3(0, 1, 0));
+  const flyStartTime = useRef(0);
+  const isFlying = useRef(false);
+  const currentLook = useRef(new THREE.Vector3());
+  const currentUp = useRef(new THREE.Vector3(0, 1, 0));
 
-  useFrame((_, delta) => {
-    const person = selectedPersonId ? getPersonById(selectedPersonId) : null;
-    let targetPos = { x: 0, y: 400, z: 200 };
-    let targetLook = { x: 0, y: 0, z: 0 };
-    let speed = 3;
+  // Trigger fly when person is selected
+  useEffect(() => {
+    if (!selectedPersonId) return;
+    const person = getPersonById(selectedPersonId);
+    if (!person) return;
 
-    // === GTA SWITCH ===
-    if (switchPhase === 'zoom_out') {
-      targetPos = { x: 0, y: 600, z: 100 };
-      targetLook = { x: 0, y: 0, z: 0 };
-      speed = 2;
-    } else if (switchPhase === 'zoom_in' && person) {
-      targetPos = { x: person.position.x, y: 100, z: person.position.z + 30 };
-      targetLook = { x: person.position.x, y: 0, z: person.position.z };
-      speed = 2.5;
+    const { position, lookAt, up } = computeFlyPose(person.lat, person.lng, FLY_ALTITUDE);
+
+    flyStartPos.current.copy(camera.position);
+    flyStartLook.current.copy(currentLook.current);
+    flyStartUp.current.copy(currentUp.current);
+    flyEndPos.current.copy(position);
+    flyEndLook.current.copy(lookAt);
+    flyEndUp.current.copy(up);
+    flyStartTime.current = Date.now();
+    isFlying.current = true;
+  }, [selectedPersonId]);
+
+  // Animate camera fly
+  useFrame(() => {
+    if (!isFlying.current) return;
+
+    const elapsed = Date.now() - flyStartTime.current;
+    const t = Math.min(elapsed / FLY_DURATION, 1);
+    // Ease in-out cubic
+    const ease = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+
+    camera.position.lerpVectors(flyStartPos.current, flyEndPos.current, ease);
+    currentLook.current.lerpVectors(flyStartLook.current, flyEndLook.current, ease);
+    currentUp.current.lerpVectors(flyStartUp.current, flyEndUp.current, ease).normalize();
+
+    camera.up.copy(currentUp.current);
+    camera.lookAt(currentLook.current);
+    camera.updateMatrixWorld(true);
+
+    if (t >= 1) {
+      isFlying.current = false;
     }
-    // === NORMAL MODES ===
-    else if (person) {
-      const angle = person.bodyAngle;
-
-      if (cameraMode === 'tps') {
-        // Third person: behind and above
-        targetPos = {
-          x: person.position.x + Math.cos(angle) * 8,
-          y: 4,
-          z: person.position.z + Math.sin(angle) * 8,
-        };
-        targetLook = {
-          x: person.position.x,
-          y: 1.5,
-          z: person.position.z,
-        };
-        speed = 4;
-      } else if (cameraMode === 'fps') {
-        // First person: eye level
-        targetPos = {
-          x: person.position.x + Math.cos(angle) * 0.3,
-          y: 1.7,
-          z: person.position.z + Math.sin(angle) * 0.3,
-        };
-        targetLook = {
-          x: person.position.x - Math.cos(angle) * 3,
-          y: 1.5,
-          z: person.position.z - Math.sin(angle) * 3,
-        };
-        speed = 5;
-      } else {
-        // God view focused on person
-        targetPos = {
-          x: person.position.x,
-          y: 150,
-          z: person.position.z + 60,
-        };
-        targetLook = {
-          x: person.position.x,
-          y: 0,
-          z: person.position.z,
-        };
-        speed = 3;
-      }
-    }
-    // === NO SELECTION: ORBIT ===
-    else {
-      const time = Date.now() * 0.00005;
-      targetPos = {
-        x: Math.cos(time) * 100,
-        y: 400,
-        z: Math.sin(time) * 100 + 100,
-      };
-      targetLook = { x: 0, y: 0, z: 0 };
-      speed = 1.5;
-    }
-
-    // Apply exponential lerp to camera position
-    camera.position.x = expLerp(camera.position.x, targetPos.x, speed, delta);
-    camera.position.y = expLerp(camera.position.y, targetPos.y, speed, delta);
-    camera.position.z = expLerp(camera.position.z, targetPos.z, speed, delta);
-
-    // Apply exponential lerp to look target
-    lookTarget.current.x = expLerp(lookTarget.current.x, targetLook.x, speed, delta);
-    lookTarget.current.y = expLerp(lookTarget.current.y, targetLook.y, speed, delta);
-    lookTarget.current.z = expLerp(lookTarget.current.z, targetLook.z, speed, delta);
-
-    camera.lookAt(lookTarget.current);
   });
 
   return null;

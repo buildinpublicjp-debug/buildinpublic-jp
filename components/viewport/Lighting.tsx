@@ -10,7 +10,7 @@ export function Lighting() {
     <>
       <ambientLight intensity={isNight ? 0.08 : 0.4} color={isNight ? '#0a0a20' : '#b0c0e0'} />
       <directionalLight position={[100, 200, 50]} intensity={isNight ? 0.03 : 0.6} color={isNight ? '#1a1a40' : '#ffffff'} />
-      <fog attach="fog" args={['#050508', 200, 1000]} />
+      {!process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY && <fog attach="fog" args={['#050508', 200, 1000]} />}
     </>
   );
 }

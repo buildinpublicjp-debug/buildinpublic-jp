@@ -19,6 +19,8 @@ export interface AIPerson {
   job: { ja: string; en: string };
   area: string;
   appearance: { height: number; build: string; style: string };
+  lat: number;
+  lng: number;
   position: { x: number; z: number };
   currentPhase: Phase;
   hoursUntilSex: number;
@@ -125,6 +127,8 @@ export function generatePerson(id: number): AIPerson {
       build: ['slim','average','athletic','muscular'][Math.floor(r()*4)],
       style: ['casual','smart','street','minimal'][Math.floor(r()*4)],
     },
+    lat: area.lat + (r()-0.5) * 0.005,
+    lng: area.lng + (r()-0.5) * 0.005,
     position: { x: area.x + (r()-0.5)*40, z: area.z + (r()-0.5)*40 },
     currentPhase: phase,
     hoursUntilSex: Math.round(hoursLeft*10)/10,
