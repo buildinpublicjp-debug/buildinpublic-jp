@@ -7,10 +7,13 @@ import { PHASE_META } from '../../engine/scoring';
 
 const SIZE = 200;
 
+// Bounding box covering all 20 Tokyo areas (with padding)
+const BOUNDS = { minLat: 35.60, maxLat: 35.74, minLng: 139.57, maxLng: 139.82 };
+
 function toPixel(lat: number, lng: number) {
   return {
-    x: ((lng - 139.68) / 0.04) * SIZE,
-    y: ((35.68 - lat) / 0.04) * SIZE,
+    x: ((lng - BOUNDS.minLng) / (BOUNDS.maxLng - BOUNDS.minLng)) * SIZE,
+    y: ((BOUNDS.maxLat - lat) / (BOUNDS.maxLat - BOUNDS.minLat)) * SIZE,
   };
 }
 
@@ -40,7 +43,7 @@ export function Minimap() {
       >
         {/* OpenStreetMap background */}
         <iframe
-          src="https://www.openstreetmap.org/export/embed.html?bbox=139.68,35.64,139.72,35.68&layer=mapnik"
+          src="https://www.openstreetmap.org/export/embed.html?bbox=139.57,35.60,139.82,35.74&layer=mapnik"
           width={SIZE}
           height={SIZE}
           style={{ border: 0, borderRadius: '8px', opacity: 0.85 }}
