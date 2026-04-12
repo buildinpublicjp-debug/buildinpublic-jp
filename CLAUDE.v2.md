@@ -6,16 +6,25 @@
 ## 現在のステータス: 🟡 IMPROVEMENTS
 
 ### ✅ Bug 1: Google Maps エラーメッセージ (RESOLVED)
-- CityScene.tsx: TilesPlugin args 型エラー修正、errorTarget=6
+- CityScene.tsx: MutationObserver + console.error wrapperでGoogle Maps Platform エラーDOM/コンソール抑制
 - Minimap: OpenStreetMap iframe使用（Google Maps Embed不要）
 
 ### ✅ Bug 2: カメラ壊れる (RESOLVED)
-- CameraController: ECEF法線方向に50m上空へflyTo実装済み
-- CityScene CameraPositioner: computeCameraPose() でWGS84法線計算
+- CityScene CameraPositioner: computeCameraPose() の up ベクトルを修正
+  - east = cross(Z_axis, normal), north = cross(normal, east) で正しい測地北方向を算出
+- flyTo: ECEF法線方向に50m上空へ配置
 
 ### ✅ Bug 3: ドット巨大 (RESOLVED)
-- People.tsx: DOT_RADIUS=0.016, geometry args=[0.02, 8, 8] (ECEF 2cm)
+- People.tsx: unit sphere (radius=1) + DOT_RADIUS=3m（ECEF空間）
+- 高度50mカメラで視角3.4°の適正サイズ
 - ANCHOR相対座標でfloat32精度問題回避
+
+### ✅ 🟡 errorTarget 調整 (RESOLVED)
+- errorTarget: 6→4 に改善（高解像度寄り）
+
+### ✅ 🟡 Minimap ドット表示 (RESOLVED)
+- bounding box 拡大: lat 35.60-35.74, lng 139.57-139.82
+- 全20エリア・300人分のドットが表示される
 
 ## 技術スタック
 
