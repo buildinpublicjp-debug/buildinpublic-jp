@@ -115,8 +115,47 @@ function TilesLoadMonitor() {
   return null;
 }
 
+// Suppress Google Maps Platform error overlay injected by the Maps JS API
+function useGoogleMapsErrorSuppressor() {
+  useEffect(() => {
+    // Suppress Google Maps error divs that get injected into the DOM
+    const observer = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        for (const node of Array.from(mutation.addedNodes)) {
+          if (node instanceof HTMLElement) {
+            const text = node.textContent || '';
+            if (
+              text.includes('Google Maps Platform') ||
+              text.includes('This page can\'t load Google Maps') ||
+              text.includes('For development purposes only')
+            ) {
+              node.style.display = 'none';
+              node.remove();
+            }
+          }
+        }
+      }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    // Suppress uncaught Google Maps errors from console
+    const originalError = console.error;
+    console.error = (...args: unknown[]) => {
+      const msg = String(args[0] || '');
+      if (msg.includes('Google Maps') || msg.includes('google.maps')) return;
+      originalError.apply(console, args);
+    };
+
+    return () => {
+      observer.disconnect();
+      console.error = originalError;
+    };
+  }, []);
+}
+
 export function CityScene() {
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+  useGoogleMapsErrorSuppressor();
 
   if (!apiKey) {
     return (

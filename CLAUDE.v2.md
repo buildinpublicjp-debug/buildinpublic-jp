@@ -3,29 +3,19 @@
 ## ミッション
 実在する東京の街で300人のAIキャラの親密さをフォトリアリスティック3Dでシミュレーション。
 
-## 現在のステータス: 🔴 CRITICAL BUGS
+## 現在のステータス: 🟡 IMPROVEMENTS
 
-### Bug 1: Google Maps エラーメッセージが画面に表示される
-- 原因: ミニマップまたはCitySceneがGoogle Maps APIを呼んでエラーを返している
-- 確認方法: ブラウザ DevTools > Console で "Google Maps Platform" エラーを検索
-- 修正: エラーを出しているコンポーネントを特定し、エラーメッセージをUIに表示しないようにする
-- ミニマップはOpenStreetMapのiframeを使う（Google Maps Embed不要）
+### ✅ Bug 1: Google Maps エラーメッセージ (RESOLVED)
+- CityScene.tsx: TilesPlugin args 型エラー修正、errorTarget=6
+- Minimap: OpenStreetMap iframe使用（Google Maps Embed不要）
 
-### Bug 2: カード選択時にカメラが壊れる
-- 原因: CameraController or flyTarget がECEF座標系を考慮していない
-- 修正: 選択時のカメラ位置を人のECEF座標の「上空50m（法線方向）」に設定
-```typescript
-const normal = new THREE.Vector3(ecef.x, ecef.y, ecef.z).normalize();
-const camTarget = new THREE.Vector3(
-  ecef.x + normal.x * 50,
-  ecef.y + normal.y * 50,
-  ecef.z + normal.z * 50
-);
-```
+### ✅ Bug 2: カメラ壊れる (RESOLVED)
+- CameraController: ECEF法線方向に50m上空へflyTo実装済み
+- CityScene CameraPositioner: computeCameraPose() でWGS84法線計算
 
-### Bug 3: 人のドットが巨大
-- 原因: ECEF座標系での1ユニット=1メートルだが、スケールが合ってない
-- 修正: People.tsx の geometry サイズを1/100にして確認、調整
+### ✅ Bug 3: ドット巨大 (RESOLVED)
+- People.tsx: DOT_RADIUS=0.016, geometry args=[0.02, 8, 8] (ECEF 2cm)
+- ANCHOR相対座標でfloat32精度問題回避
 
 ## 技術スタック
 
@@ -135,8 +125,8 @@ components/
 4. loadSiblingsをfalseにする
 
 ## 次のタスク（優先順位順）
-1. 🔴 Bug 1-3 を修正
-2. 🟡 errorTarget調整でテクスチャ品質改善
+1. ~~🔴 Bug 1-3 を修正~~ ✅ DONE
+2. 🟡 errorTarget調整でテクスチャ品質改善（現在 errorTarget=6）
 3. 🟡 ミニマップにドット表示
-4. 🟢 ギャルゲーモード統合（SceneOverlay → page.tsx）
+4. ✅ ギャルゲーモード統合（SceneOverlay → page.tsx） DONE
 5. 🟢 BGM/環境音
