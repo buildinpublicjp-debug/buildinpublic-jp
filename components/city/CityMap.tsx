@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { usePeopleStore } from '../../stores/peopleStore';
+import { useGameStore, type AnalysisLayer } from '../../stores/gameStore';
 import type { Phase } from '../../engine/scoring';
 import { CROSS_SECTION_SLOTS, DISTRICTS } from '../../data/areas';
 import type { District } from '../../data/areas';
@@ -103,7 +104,38 @@ interface CoupleOnMap {
   // マップ上のオフセット位置
   offsetX: number;
   offsetY: number;
+  // Layer data
+  desire: number;      // average desire 0-100
+  trust: number;       // average trust 0-100
+  anxiety: number;     // average anxiety 0-100
+  chemistry: number;   // MBTI chemistry score 0-100
+  personAId: string;
+  personBId: string;
 }
+
+// Desire layer: blue(0) → yellow(50) → red(100)
+function desireColor(value: number): string {
+  const t = value / 100;
+  if (t < 0.5) {
+    const r = Math.round(60 + t * 2 * 195);
+    const g = Math.round(100 + t * 2 * 155);
+    const b = Math.round(255 - t * 2 * 155);
+    return `rgb(${r},${g},${b})`;
+  }
+  const r = 255;
+  const g = Math.round(255 - (t - 0.5) * 2 * 230);
+  const b = Math.round(100 - (t - 0.5) * 2 * 100);
+  return `rgb(${r},${g},${b})`;
+}
+
+// Layer button config
+const LAYER_BUTTONS: { id: AnalysisLayer; label: string }[] = [
+  { id: 'default', label: 'DEFAULT' },
+  { id: 'desire', label: 'DESIRE' },
+  { id: 'trust', label: 'TRUST' },
+  { id: 'anxiety', label: 'ANXIETY' },
+  { id: 'chemistry', label: 'CHEMISTRY' },
+];
 
 interface CityMapProps {
   onSelectCouple?: (relationshipId: string, personAId: string, personBId: string) => void;
@@ -112,6 +144,8 @@ interface CityMapProps {
 export function CityMap({ onSelectCouple }: CityMapProps) {
   const relationships = usePeopleStore(s => s.relationships);
   const getCrossSectionCouples = usePeopleStore(s => s.getCrossSectionCouples);
+  const activeLayer = useGameStore(s => s.activeLayer);
+  const setActiveLayer = useGameStore(s => s.setActiveLayer);
   const [hoveredCouple, setHoveredCouple] = useState<string | null>(null);
 
   const showRain = useMemo(() => shouldShowRain(), []);
@@ -168,6 +202,12 @@ export function CityMap({ onSelectCouple }: CityMapProps) {
           area: area.name,
           offsetX: ox,
           offsetY: oy,
+          desire: (a.emotions.desire + b.emotions.desire) / 2,
+          trust: (a.emotions.trust + b.emotions.trust) / 2,
+          anxiety: (a.emotions.anxiety + b.emotions.anxiety) / 2,
+          chemistry: rel.chemistryScore,
+          personAId: a.id,
+          personBId: b.id,
         });
       }
     }
@@ -456,10 +496,76 @@ export function CityMap({ onSelectCouple }: CityMapProps) {
           </g>
         ))}
 
-        {/* カップルドット (#033 改善 + #044 タッチ + #048 クリック拡大) */}
+        {/* ANXIETY layer: area-level darkness overlay */}
+        {activeLayer === 'anxiety' && MAP_AREAS.map(area => {
+          const areaCouples = couples.filter(c => c.area === area.name);
+          const avgAnxiety = areaCouples.length > 0
+            ? areaCouples.reduce((sum, c) => sum + c.anxiety, 0) / areaCouples.length
+            : 0;
+          // Higher anxiety = darker overlay
+          const darkness = avgAnxiety / 100 * 0.6;
+          return (
+            <circle
+              key={`anxiety-${area.name}`}
+              cx={area.cx}
+              cy={area.cy}
+              r={area.radius}
+              fill="#000000"
+              fillOpacity={darkness}
+              style={{ pointerEvents: 'none' }}
+            >
+              <animate
+                attributeName="fill-opacity"
+                values={`${darkness};${darkness * 1.3};${darkness}`}
+                dur="3s"
+                repeatCount="indefinite"
+              />
+            </circle>
+          );
+        })}
+
+        {/* TRUST layer: lines between couple pairs showing trust level */}
+        {activeLayer === 'trust' && couples.map((couple, i) => {
+          // Draw a trust arc/line from dot A to dot B with width based on trust
+          const trustWidth = 0.05 + (couple.trust / 100) * 0.25;
+          const trustOpacity = 0.2 + (couple.trust / 100) * 0.6;
+          const trustColor = couple.trust > 60 ? '#10b981' : couple.trust > 35 ? '#fbbf24' : '#ef4444';
+          const dotOffsetA = 0.3;
+          const dotOffsetB = -0.3;
+          return (
+            <line
+              key={`trust-${couple.id}`}
+              x1={couple.offsetX + dotOffsetA}
+              y1={couple.offsetY - 0.1}
+              x2={couple.offsetX + dotOffsetB}
+              y2={couple.offsetY + 0.1}
+              stroke={trustColor}
+              strokeOpacity={trustOpacity}
+              strokeWidth={trustWidth}
+              strokeLinecap="round"
+              style={{ pointerEvents: 'none' }}
+            >
+              <animate
+                attributeName="stroke-opacity"
+                values={`${trustOpacity};${trustOpacity * 0.5};${trustOpacity}`}
+                dur="2.5s"
+                repeatCount="indefinite"
+              />
+            </line>
+          );
+        })}
+
+        {/* カップルドット (#033 改善 + SimCity layers) */}
         {couples.map(couple => {
           const isHovered = hoveredCouple === couple.id;
-          const color = PHASE_COLORS[couple.phase];
+          // Layer-dependent color
+          const defaultColor = PHASE_COLORS[couple.phase];
+          const layerColor = activeLayer === 'desire' ? desireColor(couple.desire)
+            : activeLayer === 'trust' ? (couple.trust > 60 ? '#10b981' : couple.trust > 35 ? '#fbbf24' : '#ef4444')
+            : activeLayer === 'anxiety' ? `hsl(${40 - couple.anxiety * 0.4}, 90%, ${50 + couple.anxiety * 0.3}%)`
+            : activeLayer === 'chemistry' ? `hsl(${280 + couple.chemistry * 0.8}, 80%, ${40 + couple.chemistry * 0.4}%)`
+            : defaultColor;
+          const color = layerColor;
           const pulse = PHASE_PULSE[couple.phase];
           const isImminent = couple.phase === 'imminent';
           const isCritical = couple.phase === 'critical';
@@ -467,13 +573,40 @@ export function CityMap({ onSelectCouple }: CityMapProps) {
           const dotR = isHovered ? 0.8 : isImminent ? 0.7 : isCritical ? 0.6 : 0.5;
           const heartbeat = HEARTBEAT_SCALE[couple.phase];
 
-          // カップルドットのオフセット (#033: 2つのドットが近くに配置)
+          // Chemistry layer: glow size based on score
+          const chemGlow = activeLayer === 'chemistry' ? 0.5 + (couple.chemistry / 100) * 2.5 : 0;
+
           const dotOffsetA = 0.3;
           const dotOffsetB = -0.3;
 
           return (
             <g key={couple.id}>
-              {/* パルスリング (also clickable for #048) */}
+              {/* Chemistry glow aura */}
+              {activeLayer === 'chemistry' && (
+                <circle
+                  cx={couple.offsetX}
+                  cy={couple.offsetY}
+                  r={chemGlow}
+                  fill={color}
+                  fillOpacity={0.08 + (couple.chemistry / 100) * 0.15}
+                  style={{ pointerEvents: 'none' }}
+                >
+                  <animate
+                    attributeName="r"
+                    values={`${chemGlow};${chemGlow * 1.3};${chemGlow}`}
+                    dur="2s"
+                    repeatCount="indefinite"
+                  />
+                  <animate
+                    attributeName="fill-opacity"
+                    values={`${0.08 + (couple.chemistry / 100) * 0.15};${0.15 + (couple.chemistry / 100) * 0.2};${0.08 + (couple.chemistry / 100) * 0.15}`}
+                    dur="2s"
+                    repeatCount="indefinite"
+                  />
+                </circle>
+              )}
+
+              {/* パルスリング */}
               <circle
                 cx={couple.offsetX}
                 cy={couple.offsetY}
@@ -502,7 +635,7 @@ export function CityMap({ onSelectCouple }: CityMapProps) {
               </circle>
 
               {/* imminentフェーズの第2ハートビートリング */}
-              {isImminent && (
+              {isImminent && activeLayer === 'default' && (
                 <circle
                   cx={couple.offsetX}
                   cy={couple.offsetY}
@@ -529,7 +662,7 @@ export function CityMap({ onSelectCouple }: CityMapProps) {
                 </circle>
               )}
 
-              {/* 透明ヒットエリア (#044: タッチターゲット拡大 r=6 for ~44px) */}
+              {/* 透明ヒットエリア */}
               <circle
                 cx={couple.offsetX}
                 cy={couple.offsetY}
@@ -542,7 +675,7 @@ export function CityMap({ onSelectCouple }: CityMapProps) {
                 onClick={() => handleCoupleClick(couple.id)}
               />
 
-              {/* カップル共有オーラ (#033) */}
+              {/* カップル共有オーラ */}
               <circle
                 cx={couple.offsetX}
                 cy={couple.offsetY}
@@ -559,7 +692,7 @@ export function CityMap({ onSelectCouple }: CityMapProps) {
                 />
               </circle>
 
-              {/* カップルドットA (#033: 2ドット表現) */}
+              {/* カップルドットA */}
               <circle
                 cx={couple.offsetX + dotOffsetA}
                 cy={couple.offsetY - 0.1}
@@ -569,7 +702,6 @@ export function CityMap({ onSelectCouple }: CityMapProps) {
                 filter={isImminent ? 'url(#dot-glow-strong)' : 'url(#dot-glow)'}
                 style={{ pointerEvents: 'none' }}
               >
-                {/* ハートビートパルス (#033) */}
                 <animateTransform
                   attributeName="transform"
                   type="scale"
@@ -580,7 +712,7 @@ export function CityMap({ onSelectCouple }: CityMapProps) {
                 />
               </circle>
 
-              {/* カップルドットB (#033: 2ドット表現) */}
+              {/* カップルドットB */}
               <circle
                 cx={couple.offsetX + dotOffsetB}
                 cy={couple.offsetY + 0.1}
@@ -600,26 +732,28 @@ export function CityMap({ onSelectCouple }: CityMapProps) {
                 />
               </circle>
 
-              {/* カップル接続線 (#033: 2ドット間の細い線) */}
-              <line
-                x1={couple.offsetX + dotOffsetA}
-                y1={couple.offsetY - 0.1}
-                x2={couple.offsetX + dotOffsetB}
-                y2={couple.offsetY + 0.1}
-                stroke={color}
-                strokeOpacity={isHovered ? 0.5 : 0.2}
-                strokeWidth="0.06"
-                style={{ pointerEvents: 'none' }}
-              />
+              {/* カップル接続線 */}
+              {activeLayer !== 'trust' && (
+                <line
+                  x1={couple.offsetX + dotOffsetA}
+                  y1={couple.offsetY - 0.1}
+                  x2={couple.offsetX + dotOffsetB}
+                  y2={couple.offsetY + 0.1}
+                  stroke={color}
+                  strokeOpacity={isHovered ? 0.5 : 0.2}
+                  strokeWidth="0.06"
+                  style={{ pointerEvents: 'none' }}
+                />
+              )}
 
               {/* ホバー時のツールチップ */}
               {isHovered && (
                 <g>
                   <rect
                     x={couple.offsetX + 1.2}
-                    y={couple.offsetY - 3}
+                    y={couple.offsetY - 3.5}
                     width="14"
-                    height="4"
+                    height={activeLayer === 'default' ? 4 : 5.5}
                     rx="0.5"
                     fill="#0a0a14"
                     fillOpacity="0.9"
@@ -629,7 +763,7 @@ export function CityMap({ onSelectCouple }: CityMapProps) {
                   />
                   <text
                     x={couple.offsetX + 2}
-                    y={couple.offsetY - 1.4}
+                    y={couple.offsetY - 1.9}
                     fontSize="1.5"
                     fill="white"
                     fillOpacity="0.9"
@@ -638,13 +772,27 @@ export function CityMap({ onSelectCouple }: CityMapProps) {
                   </text>
                   <text
                     x={couple.offsetX + 2}
-                    y={couple.offsetY + 0.2}
+                    y={couple.offsetY - 0.3}
                     fontSize="1.2"
                     fill={color}
                     fillOpacity="0.7"
                   >
                     {couple.phase.toUpperCase()} — {couple.score}%
                   </text>
+                  {activeLayer !== 'default' && (
+                    <text
+                      x={couple.offsetX + 2}
+                      y={couple.offsetY + 1.2}
+                      fontSize="1.1"
+                      fill="white"
+                      fillOpacity="0.5"
+                    >
+                      {activeLayer === 'desire' && `DESIRE: ${Math.round(couple.desire)}`}
+                      {activeLayer === 'trust' && `TRUST: ${Math.round(couple.trust)}`}
+                      {activeLayer === 'anxiety' && `ANXIETY: ${Math.round(couple.anxiety)}`}
+                      {activeLayer === 'chemistry' && `CHEMISTRY: ${couple.chemistry}`}
+                    </text>
+                  )}
                 </g>
               )}
             </g>
@@ -652,21 +800,134 @@ export function CityMap({ onSelectCouple }: CityMapProps) {
         })}
       </svg>
 
-      {/* フェーズ凡例（右下） */}
-      <div className="absolute bottom-4 right-4 z-20">
-        <div className="text-[8px] tracking-[2px] text-white/20 uppercase mb-2">Phase</div>
-        {(Object.entries(PHASE_COLORS) as [Phase, string][]).map(([phase, color]) => (
-          <div key={phase} className="flex items-center gap-1.5 mb-0.5">
-            <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: color }} />
-            <span className="text-[8px] text-white/40 uppercase tracking-wider">{phase}</span>
-          </div>
-        ))}
+      {/* Layer switch bar (bottom center) */}
+      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 flex items-center gap-0.5 bg-black/60 backdrop-blur-sm rounded-full px-1.5 py-1 border border-white/5">
+        {LAYER_BUTTONS.map(btn => {
+          const isActive = activeLayer === btn.id;
+          return (
+            <button
+              key={btn.id}
+              onClick={(e) => { e.stopPropagation(); setActiveLayer(btn.id); }}
+              className={`px-2 py-0.5 rounded-full text-[7px] tracking-[1.5px] transition-all duration-200 pointer-events-auto ${
+                isActive
+                  ? 'bg-white/10 text-white/80 shadow-[0_0_8px_rgba(255,255,255,0.1)]'
+                  : 'text-white/25 hover:text-white/50 hover:bg-white/5'
+              }`}
+            >
+              {btn.label}
+            </button>
+          );
+        })}
       </div>
 
-      {/* 操作ヒント */}
-      <div className="absolute bottom-4 left-4 z-20">
-        <div className="text-[8px] text-white/15 tracking-wider">TAP A DOT TO ENTER</div>
+      {/* TOKYO INTIMACY INDEX (right side panel) */}
+      <IntimacyIndex couples={couples} />
+
+      {/* フェーズ凡例（左下） — only in default layer */}
+      {activeLayer === 'default' && (
+        <div className="absolute bottom-12 left-4 z-20">
+          <div className="text-[7px] tracking-[2px] text-white/20 uppercase mb-1.5">Phase</div>
+          {(Object.entries(PHASE_COLORS) as [Phase, string][]).map(([phase, color]) => (
+            <div key={phase} className="flex items-center gap-1.5 mb-0.5">
+              <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: color }} />
+              <span className="text-[7px] text-white/35 uppercase tracking-wider">{phase}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Layer-specific legend */}
+      {activeLayer !== 'default' && (
+        <div className="absolute bottom-12 left-4 z-20">
+          <div className="text-[7px] tracking-[2px] text-white/20 uppercase mb-1.5">
+            {activeLayer}
+          </div>
+          {activeLayer === 'desire' && (
+            <div className="flex items-center gap-1">
+              <div className="w-8 h-1.5 rounded-full" style={{ background: 'linear-gradient(90deg, #3c64ff, #ffaa00, #ff1a1a)' }} />
+              <span className="text-[7px] text-white/30">0 → 100</span>
+            </div>
+          )}
+          {activeLayer === 'trust' && (
+            <>
+              {[['#ef4444', 'LOW'], ['#fbbf24', 'MID'], ['#10b981', 'HIGH']].map(([c, l]) => (
+                <div key={l} className="flex items-center gap-1.5 mb-0.5">
+                  <div className="w-4 h-0.5 rounded-full" style={{ backgroundColor: c as string }} />
+                  <span className="text-[7px] text-white/30 tracking-wider">{l}</span>
+                </div>
+              ))}
+            </>
+          )}
+          {activeLayer === 'anxiety' && (
+            <div className="flex items-center gap-1">
+              <div className="w-8 h-1.5 rounded-full" style={{ background: 'linear-gradient(90deg, #1a1a2e, #000)' }} />
+              <span className="text-[7px] text-white/30">LOW → HIGH</span>
+            </div>
+          )}
+          {activeLayer === 'chemistry' && (
+            <div className="flex items-center gap-1">
+              <div className="w-8 h-1.5 rounded-full" style={{ background: 'linear-gradient(90deg, #4a2080, #cc66ff)' }} />
+              <span className="text-[7px] text-white/30">WEAK → STRONG</span>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// TOKYO INTIMACY INDEX — right-side stats panel
+function IntimacyIndex({ couples }: { couples: CoupleOnMap[] }) {
+  const stats = useMemo(() => {
+    if (couples.length === 0) return { activity: 0, avgDesire: 0, successRate: 0 };
+    const avgDesire = couples.reduce((s, c) => s + c.desire, 0) / couples.length;
+    const imminentCount = couples.filter(c => c.phase === 'imminent' || c.phase === 'critical').length;
+    const successRate = (imminentCount / couples.length) * 100;
+    // Activity = weighted average of desire, chemistry, and inverse anxiety
+    const avgChem = couples.reduce((s, c) => s + c.chemistry, 0) / couples.length;
+    const avgAnxiety = couples.reduce((s, c) => s + c.anxiety, 0) / couples.length;
+    const activity = Math.min(100, avgDesire * 0.4 + avgChem * 0.35 + (100 - avgAnxiety) * 0.25);
+    return {
+      activity: Math.round(activity),
+      avgDesire: Math.round(avgDesire),
+      successRate: Math.round(successRate),
+    };
+  }, [couples]);
+
+  const rows = [
+    { label: 'ACTIVITY', value: stats.activity, color: stats.activity > 60 ? '#ff3366' : stats.activity > 40 ? '#ff8800' : '#4488ff' },
+    { label: 'AVG DESIRE', value: stats.avgDesire, color: stats.avgDesire > 60 ? '#ff2244' : stats.avgDesire > 40 ? '#ffaa00' : '#6688ff' },
+    { label: 'SUCCESS %', value: stats.successRate, color: stats.successRate > 30 ? '#ff0066' : stats.successRate > 15 ? '#ff6600' : '#44aaff' },
+  ];
+
+  return (
+    <div className="absolute top-14 right-3 z-20 w-[90px]">
+      <div className="text-[6px] tracking-[2px] text-white/25 uppercase mb-2 text-center">
+        Tokyo Intimacy
       </div>
+      <div className="text-[6px] tracking-[1.5px] text-white/15 uppercase mb-3 text-center">
+        INDEX
+      </div>
+      {rows.map(row => (
+        <div key={row.label} className="mb-2">
+          <div className="flex justify-between items-center mb-0.5">
+            <span className="text-[6px] tracking-[1px] text-white/30">{row.label}</span>
+            <span className="text-[8px] font-mono tabular-nums" style={{ color: row.color }}>
+              {row.value}
+            </span>
+          </div>
+          <div className="w-full h-[2px] bg-white/5 rounded-full overflow-hidden">
+            <div
+              className="h-full rounded-full transition-all duration-1000"
+              style={{
+                width: `${row.value}%`,
+                backgroundColor: row.color,
+                boxShadow: `0 0 4px ${row.color}40`,
+              }}
+            />
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
