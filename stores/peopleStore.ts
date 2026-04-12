@@ -25,6 +25,7 @@ interface PeopleState {
   getSortedByHoursLeft: () => AIPerson[];
   getCrossSectionCouples: () => CoupleData[];
   getCouplesByDistrict: (district: District) => CoupleData[];
+  getMvpRelationshipIds: () => Set<string>;
 }
 
 export const usePeopleStore = create<PeopleState>((set, get) => ({
@@ -74,5 +75,15 @@ export const usePeopleStore = create<PeopleState>((set, get) => ({
     const all = get().getCrossSectionCouples();
     const slots = CROSS_SECTION_SLOTS;
     return all.filter((_, i) => slots[i].district === district);
+  },
+
+  getMvpRelationshipIds: () => {
+    const rels = get().relationships;
+    const ids = new Set<string>();
+    for (const slot of CROSS_SECTION_SLOTS) {
+      const rel = rels[slot.coupleIndex % rels.length];
+      if (rel) ids.add(rel.id);
+    }
+    return ids;
   },
 }));
