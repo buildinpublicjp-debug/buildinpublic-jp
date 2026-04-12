@@ -173,3 +173,100 @@
   0% { opacity: 1; }
   100% { opacity: 0; pointer-events: none; }
 }
+
+/* ============================
+   モバイルレスポンシブ (375x812)
+   ============================ */
+
+/* タッチターゲット最小サイズ (44x44px) */
+@media (max-width: 480px) {
+  /* GOD VIEW: ドットのタップ領域拡大 */
+  svg circle[style*="pointer-events"] {
+    cursor: pointer;
+  }
+
+  /* フェーズ凡例 — モバイルでは横並びに圧縮 */
+  .phase-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 8px;
+  }
+
+  /* ローディングSVGをモバイル用に縮小 */
+  .loading-building-svg {
+    width: 120px;
+    height: 120px;
+  }
+  .loading-progress-track {
+    width: 100px;
+  }
+}
+
+/* 断面図ビュー — モバイル最適化 */
+@media (max-width: 480px) and (max-height: 900px) {
+  /* ヘッダーをコンパクトに */
+  .cross-section-header {
+    padding: 8px 12px;
+  }
+  .cross-section-header .district-name {
+    font-size: 10px;
+    letter-spacing: 3px;
+  }
+  .cross-section-header .district-sub {
+    font-size: 7px;
+  }
+
+  /* ビルの高さを調整 */
+  .building-section-container {
+    max-height: 45vh;
+  }
+
+  /* アバターペアの高さを調整 */
+  .avatar-pair-container {
+    max-height: 28vh;
+  }
+
+  /* WATCH/PLAYボタンを大きくしてタップしやすく */
+  .mode-toggle-btn {
+    font-size: 11px;
+    padding: 8px 16px;
+    min-height: 44px;
+    min-width: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+/* 小さいスクリーン (iPhone SE等 320px幅) */
+@media (max-width: 360px) {
+  .loading-building-svg {
+    width: 100px;
+    height: 100px;
+  }
+  .loading-text {
+    font-size: 8px;
+    letter-spacing: 3px;
+  }
+}
+
+/* Safe area対応 (ノッチ/Dynamic Island) */
+@supports (padding: env(safe-area-inset-top)) {
+  .safe-area-top {
+    padding-top: env(safe-area-inset-top);
+  }
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* タッチフィードバック */
+@media (hover: none) and (pointer: coarse) {
+  .tap-feedback {
+    -webkit-tap-highlight-color: rgba(255, 105, 180, 0.15);
+  }
+  .tap-feedback:active {
+    transform: scale(0.97);
+    transition: transform 0.1s ease;
+  }
+}
