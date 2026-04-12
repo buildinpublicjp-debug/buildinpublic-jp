@@ -1,62 +1,142 @@
-# buildinpublic.jp v2 — Agent Instructions
+# buildinpublic.jp v2 — CLAUDE.md (Harness v1)
 
-## プロダクト
+## ミッション
+実在する東京の街で300人のAIキャラの親密さをフォトリアリスティック3Dでシミュレーション。
 
-実在する東京の街で300人のAIキャラの親密さの進行をリアルタイムシミュレーション。
-GTA5キャラスイッチ × 龍が如く街密度 × トモコレ覗き見 × ギャルゲー没入感。
+## 現在のステータス: 🔴 CRITICAL BUGS
+
+### Bug 1: Google Maps エラーメッセージが画面に表示される
+- 原因: ミニマップまたはCitySceneがGoogle Maps APIを呼んでエラーを返している
+- 確認方法: ブラウザ DevTools > Console で "Google Maps Platform" エラーを検索
+- 修正: エラーを出しているコンポーネントを特定し、エラーメッセージをUIに表示しないようにする
+- ミニマップはOpenStreetMapのiframeを使う（Google Maps Embed不要）
+
+### Bug 2: カード選択時にカメラが壊れる
+- 原因: CameraController or flyTarget がECEF座標系を考慮していない
+- 修正: 選択時のカメラ位置を人のECEF座標の「上空50m（法線方向）」に設定
+```typescript
+const normal = new THREE.Vector3(ecef.x, ecef.y, ecef.z).normalize();
+const camTarget = new THREE.Vector3(
+  ecef.x + normal.x * 50,
+  ecef.y + normal.y * 50,
+  ecef.z + normal.z * 50
+);
+```
+
+### Bug 3: 人のドットが巨大
+- 原因: ECEF座標系での1ユニット=1メートルだが、スケールが合ってない
+- 修正: People.tsx の geometry サイズを1/100にして確認、調整
 
 ## 技術スタック
 
-- Next.js 14 (App Router)
-- React Three Fiber + Three.js (3D都市)
-- Mapbox GL JS (3D Buildings)
-- Zustand (状態管理)
-- Tailwind CSS
-- Framer Motion (UI遷移)
-- Supabase (DB + Auth + Realtime)
-- Claude API (シナリオ動的生成)
-- i18next (多言語 JA/EN)
+| レイヤー | 技術 |
+|---------|------|
+| フレームワーク | Next.js 14 (App Router) |
+| 3D | React Three Fiber + Three.js |
+| 3Dタイル | 3d-tiles-renderer + GoogleCloudAuthPlugin |
+| 状態管理 | Zustand |
+| スタイル | Tailwind CSS |
+| DB | Supabase |
+| AI | Claude API (@anthropic-ai/sdk) |
 
 ## ディレクトリ構造
 
 ```
-engine/         ← シミュレーションロジック
-  emotions.ts   ← 感情エンジン(12軸)
-  scoring.ts    ← 前戯度スコア計算
-  mbti.ts       ← MBTI 16タイプ + ケミストリー
-  personGenerator.ts ← 300人生成
+engine/              ← 純粋関数のみ。React依存なし
+  emotions.ts        ← 12軸感情エンジン
+  scoring.ts         ← 前戯度スコア + フェーズ判定
+  mbti.ts            ← MBTI 16タイプ + ケミストリーマトリクス
+  personGenerator.ts ← 300人生成 + 150組ペアリング
 
-data/           ← 静的データ
-  areas.ts      ← 東京20エリア
+data/
+  areas.ts           ← 東京20エリア（lat/lng + 3D座標）
   situationTemplates.ts ← フェーズ別テンプレート
 
-stores/         ← Zustand
-  gameStore.ts  ← カメラ、UI、言語
-  peopleStore.ts ← 300人の状態
+stores/              ← Zustand。Reactコンポーネント内からのみ使用
+  gameStore.ts       ← カメラモード、選択、UI、言語
+  peopleStore.ts     ← 300人の状態管理
 
-skills/         ← 開発パターン集
-  R3F_CITY.md
-  CAMERA_SYSTEM.md
-  EMOTION_ENGINE.md
-  CHARACTER_GEN.md
+lib/
+  geoUtils.ts        ← lat/lng ↔ ECEF座標変換
+  anthropic.ts       ← Claude API wrapper
 
-docs/           ← 設計書
-  PRODUCT_DESIGN.md
-  plans/        ← CCプラン出力先
-
-cc_prompts/     ← CC4窓用プロンプト
+components/
+  viewport/
+    CityScene.tsx    ← Google 3D Tiles (TilesRenderer)
+    CameraController.tsx ← GOD/TPS/FPS + GTA switch (expLerp)
+    People.tsx       ← 300人 InstancedMesh (ECEF配置)
+    Lighting.tsx     ← 時間帯連動
+    Effects.tsx      ← ポストプロセス (placeholder)
+  hud/
+    TopBar.tsx       ← 時刻 + フェーズ統計
+    CameraModeSwitch.tsx ← FPS/TPS/GOD切替
+    PersonCardSwiper.tsx ← 下部スワイプカード
+    Minimap.tsx      ← OpenStreetMap ミニマップ
+  profile/
+    ProfilePanel.tsx ← 右スライドイン プロフィール
+  scene/
+    SceneOverlay.tsx ← ギャルゲーモード テキストウィンドウ
+    ChoicePanel.tsx  ← 選択肢
+    EmotionBar.tsx   ← スコアバー
+  switch/
+    SwitchOverlay.tsx ← GTAスイッチ演出
 ```
 
 ## コーディングルール
 
-- `engine/` の関数は純粋関数。React依存なし
-- `stores/` はZustandのみ。Reactコンポーネント内からのみ使用
-- R3Fコンポーネントは `components/viewport/` に配置
-- `useFrame` 内で `setState` 禁止
-- シャドウマップ使わない
-- OrbitControls使わない
-- 新規 .ts ファイル作成時は既存のimportパスを確認
+### 絶対ルール
+- `useFrame` 内で `setState` 禁止（再レンダリング地獄）
+- `useFrame` 内で `new THREE.Object3D()` 禁止（モジュールスコープで事前生成）
+- シャドウマップ使わない（パフォーマンス）
+- OrbitControls使わない（GlobeControlsと競合）
+- `engine/` はReact依存なし（純粋関数のみ）
+- `stores/` でgetState()を使ってReact再レンダリングを回避
 
-## SKILLファイル
+### パフォーマンス
+- InstancedMeshで同じジオメトリを1 draw callで描画
+- useEffectで初期matrix/colorを1回だけセット
+- useFrame内ではselected/imminentのみmatrix更新（全300人毎フレーム更新しない）
+- phase変更時のみcolor更新（dirty flagパターン）
 
-実装前に必ず `skills/` ディレクトリの該当SKILLを読むこと。
+### 3D Tiles 設定
+- TilesRenderer の errorTarget: 2-6（低いほど高解像度、重い）
+- loadSiblings: false（必要なタイルだけロード）
+- Canvas camera: { near: 1, far: 1e10 }（グローブスケール）
+
+### ECEF座標系
+- 地球中心が原点。1ユニット=1メートル
+- 地球半径: 6,371,000m
+- 東京の高度0mでのECEF座標: 約(-3954000, 3717000, 3354000)
+- 「上方向」= normalize(position)（地球中心からの法線）
+- カメラの「高度50m」= position + normalize(position) * 50
+
+## SKILL参照
+
+| 実装内容 | 読むSKILL |
+|---------|----------|
+| 3D都市描画 | skills/R3F_CITY.md |
+| カメラ遷移 | skills/CAMERA_SYSTEM.md |
+| 感情計算 | skills/EMOTION_ENGINE.md |
+| キャラ生成 | skills/CHARACTER_GEN.md |
+
+## デバッグ手順
+
+### 3D Tilesが表示されない場合
+1. DevTools > Console で tile.googleapis.com のエラーを確認
+2. DevTools > Network で tile.googleapis.com のステータスコードを確認
+3. 403 → APIキーまたはMap Tiles APIの有効化を確認
+4. 200だがテクスチャなし → errorTargetを下げる
+5. .env.local のキーが正しいか cat で確認
+
+### パフォーマンスが悪い場合
+1. DevTools > Console に `renderer.info` を出力
+2. draw call数、triangle数を確認
+3. errorTargetを上げる（6→12）
+4. loadSiblingsをfalseにする
+
+## 次のタスク（優先順位順）
+1. 🔴 Bug 1-3 を修正
+2. 🟡 errorTarget調整でテクスチャ品質改善
+3. 🟡 ミニマップにドット表示
+4. 🟢 ギャルゲーモード統合（SceneOverlay → page.tsx）
+5. 🟢 BGM/環境音
