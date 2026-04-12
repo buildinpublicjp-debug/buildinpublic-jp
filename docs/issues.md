@@ -6,7 +6,7 @@
 ## 🔴 CRITICAL（まず動くようにする）
 
 - [ ] #001 app/page.tsxをR3F/3DTilesからデフォルメ断面図ビューに書き換え → 未着手
-- [ ] #002 components/city/CityMap.tsx 新規作成 — 渋谷・新宿・六本木のデフォルメSVGマップ → 窓1が対応中
+- [x] #002 components/city/CityMap.tsx 新規作成 — 渋谷・新宿・六本木のデフォルメSVGマップ → 窓1が修正済み
 - [ ] #003 components/cross-section/BuildingSection.tsx 新規作成 — X線断面図ビル → 未着手
 - [ ] #004 components/cross-section/AvatarPair.tsx 新規作成 — デフォルメアバター2人 → 未着手
 - [ ] #005 components/cross-section/Room.tsx 新規作成 — 部屋+家具（バー、ホテル、レストラン） → 未着手
@@ -19,7 +19,7 @@
 - [ ] #009 体の色変化（ほてり表現） → 未着手
 - [ ] #010 WATCH/PLAYモード切替UI → 窓2がstore側完了（interactionMode追加）、UI側は窓1待ち
 - [ ] #011 BGM+環境音レイヤー（Tone.js or HTML5 Audio） → 未着手
-- [ ] #012 リアルタイム時刻連動（昼夜の背景変化） → 未着手
+- [ ] #012 リアルタイム時刻連動（昼夜の背景変化） → 窓2が対応中（lib/store側）
 - [ ] #013 ミニマップにカップルのドット表示 → 未着手
 
 ## 🟢 NICE TO HAVE（磨き上げ）
