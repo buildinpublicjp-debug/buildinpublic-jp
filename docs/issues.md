@@ -17,9 +17,9 @@
 - [ ] #007 ディゾルブ遷移（GOD VIEW → 断面図）— Framer Motion → 未着手
 - [ ] #008 感情オーラSVGアニメーション（2人の間で色が混ざる） → 未着手
 - [ ] #009 体の色変化（ほてり表現） → 未着手
-- [ ] #010 WATCH/PLAYモード切替UI → 窓2がstore側完了（interactionMode追加）、UI側は窓1待ち
+- [x] #010 WATCH/PLAYモード切替UI → 窓2が修正済み（store + page.tsx統合）
 - [ ] #011 BGM+環境音レイヤー（Tone.js or HTML5 Audio） → 未着手
-- [ ] #012 リアルタイム時刻連動（昼夜の背景変化） → 窓2がlib/timeSync.ts作成完了、コンポーネント側は窓1/窓4待ち
+- [x] #012 リアルタイム時刻連動（昼夜の背景変化） → 窓2が修正済み（timeSync + page.tsx統合）
 - [ ] #013 ミニマップにカップルのドット表示 → 未着手
 
 ## 🟢 NICE TO HAVE（磨き上げ）
