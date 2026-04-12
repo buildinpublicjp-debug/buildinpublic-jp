@@ -10,7 +10,7 @@
 - [ ] #003 components/cross-section/BuildingSection.tsx 新規作成 — X線断面図ビル → 未着手
 - [ ] #004 components/cross-section/AvatarPair.tsx 新規作成 — デフォルメアバター2人 → 未着手
 - [ ] #005 components/cross-section/Room.tsx 新規作成 — 部屋+家具（バー、ホテル、レストラン） → 未着手
-- [ ] #006 stores/gameStore.ts にviewMode追加（'god' | 'cross-section' | 'scene'） → 窓2が対応中
+- [x] #006 stores/gameStore.ts にviewMode追加（'god' | 'cross-section' | 'scene'） → 窓2が修正済み
 
 ## 🟡 IMPORTANT（体験を完成させる）
 

@@ -4,6 +4,7 @@ import { create } from 'zustand';
 import type { Phase } from '../engine/scoring';
 
 type CameraMode = 'god' | 'tps' | 'fps';
+export type ViewMode = 'god' | 'cross-section' | 'scene';
 type SwitchPhase = null | 'zoom_out' | 'zoom_in';
 type UIPanel = null | 'profile' | 'scene';
 
@@ -14,6 +15,12 @@ interface FlyTarget {
 }
 
 interface GameState {
+  // View
+  viewMode: ViewMode;
+  setViewMode: (mode: ViewMode) => void;
+  selectedAreaId: string | null;
+  selectArea: (areaId: string | null) => void;
+
   // Camera
   cameraMode: CameraMode;
   switchPhase: SwitchPhase;
@@ -49,6 +56,11 @@ interface GameState {
 }
 
 export const useGameStore = create<GameState>((set, get) => ({
+  viewMode: 'god',
+  setViewMode: (mode) => set({ viewMode: mode }),
+  selectedAreaId: null,
+  selectArea: (areaId) => set({ selectedAreaId: areaId, viewMode: areaId ? 'cross-section' : 'god' }),
+
   cameraMode: 'god',
   switchPhase: null,
   setCameraMode: (mode) => set({ cameraMode: mode }),
