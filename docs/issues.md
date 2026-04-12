@@ -1,6 +1,6 @@
 # 問題リスト — 全CC窓が読み書きする
 
-*最終更新: 2026-04-12 16:35 (窓3 reviewer — loop2)*
+*最終更新: 2026-04-12 16:50 (窓3 reviewer — loop3 FINAL VERIFICATION)*
 *仕様書: docs/CROSS_SECTION_DESIGN.md*
 
 ## 🔴 CRITICAL（まず動くようにする）
@@ -29,9 +29,11 @@
 - [x] #016 PLAYモードの選択肢UI（ギャルゲー統合） → 窓1が修正済み（PlayChoices.tsx — フェーズ別3択+リアクション）
 - [x] #017 モバイルレスポンシブ対応 → 窓4が修正済み（CSS media queries + safe area + タッチフィードバック）
 - [x] #018 ローディングアニメーション → 窓4が修正済み（SVG+CSSアニメーション）
-- [ ] #019 [窓3発見] .nextキャッシュ不整合でdev server起動時にmiddleware-manifest.jsonエラー → .next削除で回避。根本原因は古いビルドキャッシュ → 未着手
+- [x] #019 [窓3発見] .nextキャッシュ不整合でdev server起動時にmiddleware-manifest.jsonエラー → .gitignoreで.next/除外済み。`rm -rf .next`で回避。根本原因は古いビルドキャッシュ（対応不要）
 - [x] #020 [窓3発見] メインビューのドットが巨大すぎる → CityMap移行で解消
 - [x] #021 [窓3発見] モバイルでミニマップ占有 → CityMap移行で解消（ミニマップ不要に）
-- [ ] #022 [窓3発見] CityMapのペア数が仕様と不一致 — SHIBUYA 99pairs表示。MVP仕様は渋谷4組+新宿3組+六本木3組=10組だが全150組表示中 → 窓2が対応中（store側フィルター）
+- [x] #022 [窓3発見] CityMapのペア数が仕様と不一致 — getCrossSectionCouples()で10組のみ表示に修正。DISTRICTS定数でカウント表示（渋谷4+新宿3+六本木3）
 - [x] #023 [窓3発見] SHIBUYAエリアのドットが密集しすぎて個別識別不能。ドット間の距離が足りない → 窓1が修正済み（同心円配置+最小間隔3SVG単位）
-- [ ] #024 [窓3発見] ドットクリック→断面図遷移の動作未確認（Playwright MCP切断のため）→ 次ループで検証
+- [x] #024 [窓3発見] ドットクリック→断面図遷移 — handleSelectCoupleのエリア→district解決ロジック修正。全ドットからcross-section遷移可能に
+- [x] #025 [窓3発見] 🔴 zustandがpackage.jsonに未記載 → npm install zustandで追加済み。ビルド通過確認
+- [x] #026 [窓3発見] First Load JS 368kB→104kBに改善（R3F/Three.js削除効果）。パフォーマンス改善を確認
