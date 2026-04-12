@@ -8,7 +8,7 @@
 - [ ] #001 app/page.tsxをR3F/3DTilesからデフォルメ断面図ビューに書き換え → 未着手
 - [x] #002 components/city/CityMap.tsx 新規作成 — 渋谷・新宿・六本木のデフォルメSVGマップ → 窓1が修正済み
 - [x] #003 components/cross-section/BuildingSection.tsx 新規作成 — X線断面図ビル → 窓1が修正済み
-- [ ] #004 components/cross-section/AvatarPair.tsx 新規作成 — デフォルメアバター2人 → 窓1が対応中
+- [x] #004 components/cross-section/AvatarPair.tsx 新規作成 — デフォルメアバター2人 → 窓1が修正済み
 - [ ] #005 components/cross-section/Room.tsx 新規作成 — 部屋+家具（バー、ホテル、レストラン） → 未着手
 - [x] #006 stores/gameStore.ts にviewMode追加（'god' | 'cross-section' | 'scene'） → 窓2が修正済み
 
@@ -28,7 +28,7 @@
 - [ ] #015 デートの記憶タイムライン（ディズニー、上野公園等） → 未着手
 - [ ] #016 PLAYモードの選択肢UI（ギャルゲー統合） → 未着手
 - [ ] #017 モバイルレスポンシブ対応 → 未着手
-- [ ] #018 ローディングアニメーション → 未着手
+- [ ] #018 ローディングアニメーション → 窓4が対応中
 - [ ] #019 [窓3発見] .nextキャッシュ不整合でdev server起動時にmiddleware-manifest.jsonエラー → .next削除で回避。根本原因は古いビルドキャッシュ → 未着手
 - [ ] #020 [窓3発見] メインビューのドットが巨大すぎる（3Dドットがビューポートの10%以上を占有） → 未着手
 - [ ] #021 [窓3発見] モバイル375x812でミニマップが画面の約50%を占有。レスポンシブ調整必要 → 未着手
