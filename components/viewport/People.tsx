@@ -13,7 +13,9 @@ const DEG2RAD = THREE.MathUtils.DEG2RAD;
 const tempObject = new THREE.Object3D();
 const tempColor = new THREE.Color();
 
-const DOT_RADIUS = 0.016;
+// ECEF units = meters. Geometry radius = 1 (unit sphere), DOT_RADIUS = world-space meters.
+// At 50m camera altitude with FOV 60°, a 3m dot is ~3.4° ≈ comfortable visual size.
+const DOT_RADIUS = 3;
 
 // Anchor point: Shibuya center ECEF (used as local origin to avoid float32 issues)
 const ANCHOR = new THREE.Vector3();
@@ -92,7 +94,7 @@ export function People() {
   return (
     <group position={[ANCHOR.x, ANCHOR.y, ANCHOR.z]} onClick={handleClick}>
       <instancedMesh ref={meshRef} args={[undefined, undefined, 300]} renderOrder={999} frustumCulled={false}>
-        <sphereGeometry args={[0.02, 8, 8]} />
+        <sphereGeometry args={[1, 8, 8]} />
         <meshBasicMaterial depthTest={false} />
       </instancedMesh>
     </group>
