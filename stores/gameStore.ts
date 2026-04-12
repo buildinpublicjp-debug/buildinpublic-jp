@@ -77,15 +77,16 @@ export const useGameStore = create<GameState>((set, get) => ({
   selectedPersonId: null,
   selectPerson: (id) => set({ selectedPersonId: id, activePanel: id ? 'profile' : null }),
   switchToPerson: (id) => {
-    const { usePeopleStore } = require('../stores/peopleStore');
-    const person = usePeopleStore.getState().getPersonById(id);
-    if (person) {
-      set({
-        selectedPersonId: id,
-        activePanel: 'profile',
-        flyTarget: { lat: person.lat, lng: person.lng, startTime: Date.now() },
-      });
-    }
+    import('../stores/peopleStore').then(({ usePeopleStore }) => {
+      const person = usePeopleStore.getState().getPersonById(id);
+      if (person) {
+        set({
+          selectedPersonId: id,
+          activePanel: 'profile',
+          flyTarget: { lat: person.lat, lng: person.lng, startTime: Date.now() },
+        });
+      }
+    });
   },
 
   flyTarget: null,

@@ -6,6 +6,17 @@ import { PHASE_META, scoreToColor } from '../../engine/scoring';
 import { MBTI_PROFILES } from '../../engine/mbti';
 import { EMOTION_META, EMOTION_KEYS, EmotionState } from '../../engine/emotions';
 
+// MBTI group badges (#040)
+function getMbtiBadge(mbti: string): { emoji: string; group: string } {
+  const type = mbti.charAt(1); // N/S + T/F combination determines group
+  const tf = mbti.charAt(2);
+  if (type === 'N' && tf === 'T') return { emoji: '🧠', group: 'Analyst' };
+  if (type === 'N' && tf === 'F') return { emoji: '💚', group: 'Diplomat' };
+  if (type === 'S' && tf === 'J') return { emoji: '🛡', group: 'Sentinel' };
+  // S + P = Explorer
+  return { emoji: '🎯', group: 'Explorer' };
+}
+
 export function ProfilePanel() {
   const selectedPersonId = useGameStore(s => s.selectedPersonId);
   const selectPerson = useGameStore(s => s.selectPerson);
@@ -62,7 +73,12 @@ export function ProfilePanel() {
         <div className="grid grid-cols-2 gap-2 mt-4">
           <InfoBox label="AGE" value={`${person.age}歳`} />
           <InfoBox label="JOB" value={person.job.ja} />
-          <InfoBox label="MBTI" value={person.mbti} color={mbtiProfile?.color} />
+          <InfoBox
+            label="MBTI"
+            value={`${getMbtiBadge(person.mbti).emoji} ${person.mbti}`}
+            sublabel={getMbtiBadge(person.mbti).group}
+            color={mbtiProfile?.color}
+          />
           <InfoBox label="ATTACHMENT" value={person.attachmentStyle} />
         </div>
 
@@ -124,10 +140,15 @@ export function ProfilePanel() {
                   <span style={{ color: `${meta.color}88` }}>{meta.label}</span>
                   <span className="text-white/20">{value}</span>
                 </div>
-                <div className="h-[2px] bg-white/[0.04] rounded-full overflow-hidden">
+                <div className="h-[3px] bg-white/[0.04] rounded-full overflow-hidden">
                   <div
                     className="h-full rounded-full transition-all duration-500"
-                    style={{ width: `${value}%`, background: meta.color, opacity: 0.6 }}
+                    style={{
+                      width: `${value}%`,
+                      background: meta.color,
+                      opacity: 0.7,
+                      boxShadow: value > 30 ? `0 0 ${Math.floor(value / 10)}px ${meta.color}88, 0 0 ${Math.floor(value / 5)}px ${meta.color}44` : 'none',
+                    }}
                   />
                 </div>
               </div>
@@ -151,13 +172,16 @@ export function ProfilePanel() {
   );
 }
 
-function InfoBox({ label, value, color }: { label: string; value: string; color?: string }) {
+function InfoBox({ label, value, sublabel, color }: { label: string; value: string; sublabel?: string; color?: string }) {
   return (
-    <div className="p-2 bg-white/[0.02] rounded border border-white/5">
+    <div className="p-2 bg-white/[0.02] rounded border border-white/5 transition-all hover:bg-white/[0.04] hover:border-white/8">
       <div className="text-[7px] tracking-[1px] text-white/20">{label}</div>
       <div className="text-sm font-light mt-0.5" style={{ color: color || 'rgba(255,255,255,0.6)' }}>
         {value}
       </div>
+      {sublabel && (
+        <div className="text-[7px] text-white/20 mt-0.5">{sublabel}</div>
+      )}
     </div>
   );
 }

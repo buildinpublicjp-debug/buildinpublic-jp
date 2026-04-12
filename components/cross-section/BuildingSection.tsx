@@ -67,6 +67,7 @@ export function BuildingSection({
   const totalHeight = floors * FLOOR_HEIGHT + ROOF_HEIGHT;
 
   // 各部屋の位置を計算
+  // #046: 1Fが下、高い階が上（自然な建物レイアウト）
   const roomPositions = useMemo(() => {
     const positions: { room: RoomSlot; x: number; y: number; w: number; h: number }[] = [];
     const innerWidth = width - WALL_THICKNESS * 2;
@@ -82,7 +83,8 @@ export function BuildingSection({
         roomX = WALL_THICKNESS + innerWidth / 2 + 2;
       }
 
-      const roomY = totalHeight - ROOF_HEIGHT - (room.floor + 1) * FLOOR_HEIGHT + 4;
+      // #046: floor 0 (1F) is at the bottom of the building
+      const roomY = ROOF_HEIGHT + (floors - 1 - room.floor) * FLOOR_HEIGHT + 4;
 
       positions.push({
         room,
@@ -93,7 +95,13 @@ export function BuildingSection({
       });
     }
     return positions;
-  }, [rooms, floors, width, totalHeight]);
+  }, [rooms, floors, width]);
+
+  // エレベーターシャフト位置
+  const elevatorX = width - WALL_THICKNESS - 12;
+  const elevatorW = 10;
+  const elevatorTop = ROOF_HEIGHT;
+  const elevatorBottom = totalHeight;
 
   return (
     <svg
@@ -102,10 +110,18 @@ export function BuildingSection({
       preserveAspectRatio="xMidYMid meet"
     >
       <defs>
-        {/* X線グロウ効果 */}
-        <filter id={`xray-${name}`}>
-          <feGaussianBlur stdDeviation="1" result="blur" />
+        {/* #029 X線ネオングロウ効果 */}
+        <filter id={`xray-glow-${name}`} x="-20%" y="-20%" width="140%" height="140%">
+          <feGaussianBlur stdDeviation="2" result="blur" />
           <feComposite in="SourceGraphic" in2="blur" operator="over" />
+        </filter>
+
+        <filter id={`wall-glow-${name}`} x="-10%" y="-10%" width="120%" height="120%">
+          <feGaussianBlur stdDeviation="1.5" in="SourceGraphic" result="blur" />
+          <feMerge>
+            <feMergeNode in="blur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
         </filter>
 
         {/* 部屋内の光源 */}
@@ -117,31 +133,53 @@ export function BuildingSection({
         ))}
       </defs>
 
-      {/* ビル外壁 — X線スタイル（輪郭のみ） */}
+      {/* #029 ビル外壁 — 半透明ブルーホワイトネオングロウ */}
       <rect
         x="0"
         y={ROOF_HEIGHT}
         width={width}
         height={totalHeight - ROOF_HEIGHT}
         fill="none"
-        stroke="#334466"
+        stroke="#4488cc"
         strokeWidth="1.5"
-        strokeOpacity="0.4"
+        strokeOpacity="0.6"
         rx="2"
+        filter={`url(#wall-glow-${name})`}
       />
 
       {/* 屋上 */}
       <path
         d={`M ${width * 0.1} ${ROOF_HEIGHT} L ${width * 0.3} 2 L ${width * 0.7} 2 L ${width * 0.9} ${ROOF_HEIGHT}`}
         fill="none"
-        stroke="#334466"
+        stroke="#4488cc"
         strokeWidth="1"
-        strokeOpacity="0.3"
+        strokeOpacity="0.4"
+        filter={`url(#wall-glow-${name})`}
       />
 
-      {/* 階の仕切り線 */}
+      {/* #029 外壁の窓フレーム（空部屋のある階の外壁に小さな矩形を等間隔配置） */}
+      {Array.from({ length: floors }, (_, i) => {
+        // #046: floor index i: floor 0 (1F) at bottom
+        const floorTopY = ROOF_HEIGHT + (floors - 1 - i) * FLOOR_HEIGHT;
+        const windowY = floorTopY + 10;
+        const windowH = FLOOR_HEIGHT * 0.45;
+        // 左壁側の窓
+        return (
+          <g key={`win-${i}`}>
+            {/* 左壁窓 */}
+            <rect x={1} y={windowY} width={2.5} height={windowH}
+              fill="none" stroke="#4488cc" strokeWidth="0.3" strokeOpacity="0.25" rx="0.3" />
+            {/* 右壁窓 */}
+            <rect x={width - 3.5} y={windowY} width={2.5} height={windowH}
+              fill="none" stroke="#4488cc" strokeWidth="0.3" strokeOpacity="0.25" rx="0.3" />
+          </g>
+        );
+      })}
+
+      {/* #029 階の仕切り線 — 薄い点線の内壁 */}
       {Array.from({ length: floors - 1 }, (_, i) => {
-        const y = totalHeight - (i + 1) * FLOOR_HEIGHT;
+        // #046: divider between floor i and i+1
+        const y = ROOF_HEIGHT + (i + 1) * FLOOR_HEIGHT;
         return (
           <line
             key={i}
@@ -149,24 +187,94 @@ export function BuildingSection({
             y1={y}
             x2={width - WALL_THICKNESS}
             y2={y}
-            stroke="#334466"
+            stroke="#4488cc"
             strokeWidth="0.5"
             strokeOpacity="0.2"
-            strokeDasharray="4 4"
+            strokeDasharray="3 3"
           />
         );
       })}
 
-      {/* 階番号 */}
+      {/* #029 階段（ジグザグ線 — 左側） */}
+      {Array.from({ length: floors - 1 }, (_, i) => {
+        const topY = ROOF_HEIGHT + (floors - 2 - i) * FLOOR_HEIGHT;
+        const botY = topY + FLOOR_HEIGHT;
+        const stairX = WALL_THICKNESS + 6;
+        const stepCount = 6;
+        const stepH = FLOOR_HEIGHT / stepCount;
+        const stepW = 4;
+
+        const points = Array.from({ length: stepCount + 1 }, (__, s) => {
+          const sx = stairX + (s % 2 === 0 ? 0 : stepW);
+          const sy = topY + s * stepH;
+          return `${sx},${sy}`;
+        }).join(' ');
+
+        return (
+          <polyline
+            key={`stair-${i}`}
+            points={points}
+            fill="none"
+            stroke="#4488cc"
+            strokeWidth="0.4"
+            strokeOpacity="0.15"
+          />
+        );
+      })}
+
+      {/* #029 エレベーターシャフト（右側の垂直矩形 + 動くインジケーター） */}
+      <rect
+        x={elevatorX}
+        y={elevatorTop}
+        width={elevatorW}
+        height={elevatorBottom - elevatorTop}
+        fill="none"
+        stroke="#4488cc"
+        strokeWidth="0.4"
+        strokeOpacity="0.15"
+        strokeDasharray="2 2"
+      />
+      {/* エレベーターケーブル */}
+      <line
+        x1={elevatorX + elevatorW / 2}
+        y1={elevatorTop}
+        x2={elevatorX + elevatorW / 2}
+        y2={elevatorBottom}
+        stroke="#4488cc"
+        strokeWidth="0.3"
+        strokeOpacity="0.1"
+      />
+      {/* エレベーター箱（動くインジケーター） */}
+      <rect
+        x={elevatorX + 1}
+        y={elevatorTop + 4}
+        width={elevatorW - 2}
+        height={8}
+        fill="#4488cc"
+        fillOpacity="0.08"
+        stroke="#4488cc"
+        strokeWidth="0.4"
+        strokeOpacity="0.3"
+        rx="1"
+      >
+        <animate
+          attributeName="y"
+          values={`${elevatorTop + 4};${elevatorBottom - 14};${elevatorTop + 4}`}
+          dur="8s"
+          repeatCount="indefinite"
+        />
+      </rect>
+
+      {/* #046: 階番号 — 1Fが下、上に行くほど数字が増える */}
       {Array.from({ length: floors }, (_, i) => {
-        const y = totalHeight - i * FLOOR_HEIGHT - FLOOR_HEIGHT / 2;
+        const y = ROOF_HEIGHT + (floors - 1 - i) * FLOOR_HEIGHT + FLOOR_HEIGHT / 2;
         return (
           <text
             key={`fl-${i}`}
             x={width + 6}
             y={y + 3}
             fontSize="8"
-            fill="#445566"
+            fill="#4488cc"
             fillOpacity="0.4"
           >
             {i + 1}F
@@ -196,9 +304,10 @@ export function BuildingSection({
               height={h}
               fill={hasPeople ? glowColor : '#0a0a14'}
               fillOpacity={hasPeople ? 0.15 : 0.5}
-              stroke={isSelected ? '#ffffff' : '#334466'}
+              stroke={isSelected ? '#ffffff' : '#4488cc'}
               strokeWidth={isSelected ? 1.5 : 0.5}
-              strokeOpacity={isSelected ? 0.8 : 0.3}
+              strokeOpacity={isSelected ? 0.8 : 0.2}
+              strokeDasharray={isSelected ? 'none' : '4 2'}
               rx="1"
             />
 
@@ -230,9 +339,9 @@ export function BuildingSection({
                   width={w * 0.3}
                   height={h * 0.5}
                   fill="none"
-                  stroke="#334466"
+                  stroke="#4488cc"
                   strokeWidth="0.3"
-                  strokeOpacity="0.2"
+                  strokeOpacity="0.15"
                 />
                 <rect
                   x={x + w * 0.55}
@@ -240,9 +349,9 @@ export function BuildingSection({
                   width={w * 0.3}
                   height={h * 0.5}
                   fill="none"
-                  stroke="#334466"
+                  stroke="#4488cc"
                   strokeWidth="0.3"
-                  strokeOpacity="0.2"
+                  strokeOpacity="0.15"
                 />
               </>
             )}

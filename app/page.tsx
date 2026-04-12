@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { usePeopleStore } from '../stores/peopleStore';
 import { useGameStore } from '../stores/gameStore';
 import { CityMap } from '../components/city/CityMap';
@@ -10,6 +10,40 @@ import { CROSS_SECTION_SLOTS, DISTRICTS, type District } from '../data/areas';
 import { startTimeSync, getTimeTheme, getTimeOfDay } from '../lib/timeSync';
 import { ViewTransition } from '../components/cross-section/ViewTransition';
 import { initAudio, playAmbientTone, toggleMute, isMuted } from '../lib/audio';
+import { NightSky } from '../components/cross-section/NightSky';
+
+// Typewriter text component for literary atmosphere (#035)
+function TypewriterText({ text, className, style }: { text: string; className?: string; style?: React.CSSProperties }) {
+  const [displayed, setDisplayed] = useState('');
+  const prevTextRef = useRef(text);
+
+  useEffect(() => {
+    // Reset when text changes
+    if (text !== prevTextRef.current) {
+      setDisplayed('');
+      prevTextRef.current = text;
+    }
+
+    let idx = 0;
+    setDisplayed('');
+    const interval = setInterval(() => {
+      idx++;
+      setDisplayed(text.slice(0, idx));
+      if (idx >= text.length) clearInterval(interval);
+    }, 40);
+
+    return () => clearInterval(interval);
+  }, [text]);
+
+  return (
+    <div className={className} style={style}>
+      {displayed}
+      {displayed.length < text.length && (
+        <span className="animate-pulse">|</span>
+      )}
+    </div>
+  );
+}
 
 export default function Home() {
   const initialize = usePeopleStore(s => s.initialize);
@@ -27,6 +61,24 @@ export default function Home() {
   const [selectedCoupleIndex, setSelectedCoupleIndex] = useState<number | null>(null);
   const [audioStarted, setAudioStarted] = useState(false);
   const [muted, setMuted] = useState(false);
+
+  // Feedback form state (#043)
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [feedbackText, setFeedbackText] = useState('');
+  const [feedbackSent, setFeedbackSent] = useState(false);
+
+  const handleFeedbackSubmit = useCallback(async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!feedbackText.trim()) return;
+    await fetch('/api/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ comment: feedbackText.trim() }),
+    });
+    setFeedbackText('');
+    setFeedbackSent(true);
+    setTimeout(() => { setFeedbackSent(false); setFeedbackOpen(false); }, 2000);
+  }, [feedbackText]);
 
   // Initialize people + time sync
   useEffect(() => {
@@ -145,6 +197,72 @@ export default function Home() {
           />
         )}
       </ViewTransition>
+
+      {/* /versions link (#042) */}
+      <a
+        href="/versions"
+        className="absolute bottom-3 left-4 z-30 text-[9px] tracking-[2px] text-white/15 hover:text-white/40 transition-colors"
+      >
+        VERSIONS
+      </a>
+
+      {/* Feedback form (#043) */}
+      <div className="absolute bottom-3 right-4 z-30">
+        {feedbackOpen ? (
+          <form
+            onSubmit={handleFeedbackSubmit}
+            className="bg-black/80 backdrop-blur-sm border border-white/10 rounded-lg p-3 w-[220px]"
+            onClick={(e) => e.stopPropagation()}
+            style={{ animation: 'feedbackSlideUp 0.2s ease-out' }}
+          >
+            {feedbackSent ? (
+              <div className="text-[10px] text-white/50 text-center py-2 tracking-[2px]">SENT</div>
+            ) : (
+              <>
+                <textarea
+                  value={feedbackText}
+                  onChange={(e) => setFeedbackText(e.target.value)}
+                  placeholder="What should evolve next?"
+                  rows={2}
+                  className="w-full bg-white/5 border border-white/10 rounded text-[11px] text-white/70 p-2 resize-none focus:outline-none focus:border-white/25 placeholder:text-white/20"
+                  required
+                />
+                <div className="flex justify-between items-center mt-2">
+                  <button
+                    type="button"
+                    onClick={() => setFeedbackOpen(false)}
+                    className="text-[8px] tracking-[2px] text-white/20 hover:text-white/40"
+                  >
+                    CLOSE
+                  </button>
+                  <button
+                    type="submit"
+                    className="text-[8px] tracking-[2px] text-[#ff3366]/70 hover:text-[#ff3366] px-2 py-1 border border-[#ff3366]/20 rounded hover:border-[#ff3366]/40 transition-colors"
+                  >
+                    SEND
+                  </button>
+                </div>
+              </>
+            )}
+          </form>
+        ) : (
+          <button
+            onClick={(e) => { e.stopPropagation(); setFeedbackOpen(true); }}
+            className="text-[9px] tracking-[2px] text-white/15 hover:text-white/40 transition-colors"
+          >
+            FEEDBACK
+          </button>
+        )}
+      </div>
+
+      {/* Google Fonts for Noto Serif JP (#035) + animation styles */}
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;500&display=swap');
+        @keyframes feedbackSlideUp {
+          from { opacity: 0; transform: translateY(8px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
     </div>
   );
 }
@@ -202,6 +320,9 @@ function CrossSectionView({
 
   return (
     <div className="relative w-full h-full z-10 flex flex-col">
+      {/* Night sky background (#030) */}
+      <NightSky hour={currentHour} />
+
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 z-20">
         <button
@@ -263,11 +384,13 @@ function CrossSectionView({
                   bodyAngle: selectedCouple.personB.bodyAngle,
                 }}
               />
-              {/* Situation text */}
+              {/* Situation text with typewriter effect (#035) */}
               <div className="absolute bottom-0 left-0 right-0 text-center px-4">
-                <div className="text-[9px] text-white/40 leading-relaxed">
-                  {selectedCouple.personA.situation}
-                </div>
+                <TypewriterText
+                  text={selectedCouple.personA.situation}
+                  className="text-[12px] text-white/50 leading-[2] italic"
+                  style={{ fontFamily: "'Noto Serif JP', serif", letterSpacing: '0.05em' }}
+                />
               </div>
             </div>
           </div>

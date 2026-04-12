@@ -134,9 +134,19 @@ function generateChoices(phase: Phase, nameA: string, nameB: string): PlayChoice
   }
 }
 
+// Phase-based reaction emoji
+const PHASE_REACTIONS: Record<Phase, string[]> = {
+  seed: ['😮', '👀', '💭'],
+  approach: ['😊', '💓', '✨'],
+  escalation: ['😏', '🔥', '💋'],
+  critical: ['😮', '💘', '🫣'],
+  imminent: ['🥵', '💥', '❤️‍🔥'],
+};
+
 export function PlayChoices({ phase, personAName, personBName, onChoose }: PlayChoicesProps) {
   const [chosen, setChosen] = useState<number | null>(null);
   const [reaction, setReaction] = useState<string | null>(null);
+  const [reactionEmoji, setReactionEmoji] = useState<string | null>(null);
 
   const choices = useMemo(
     () => generateChoices(phase, personAName, personBName),
@@ -147,6 +157,15 @@ export function PlayChoices({ phase, personAName, personBName, onChoose }: PlayC
   if (reaction) {
     return (
       <div className="px-4 py-3">
+        {/* Character reaction emoji flash */}
+        {reactionEmoji && (
+          <div
+            className="text-center text-2xl mb-2"
+            style={{ animation: 'emojiPop 0.6s ease forwards' }}
+          >
+            {reactionEmoji}
+          </div>
+        )}
         <div
           className="text-[11px] text-white/60 leading-relaxed text-center"
           style={{
@@ -159,6 +178,7 @@ export function PlayChoices({ phase, personAName, personBName, onChoose }: PlayC
           onClick={() => {
             setChosen(null);
             setReaction(null);
+            setReactionEmoji(null);
           }}
           className="block mx-auto mt-3 text-[8px] tracking-[3px] text-white/20 hover:text-white/40 transition-colors"
         >
@@ -168,6 +188,11 @@ export function PlayChoices({ phase, personAName, personBName, onChoose }: PlayC
           @keyframes fadeInUp {
             from { opacity: 0; transform: translateY(8px); }
             to { opacity: 1; transform: translateY(0); }
+          }
+          @keyframes emojiPop {
+            0% { transform: scale(0) rotate(-10deg); opacity: 0; }
+            50% { transform: scale(1.4) rotate(5deg); opacity: 1; }
+            100% { transform: scale(1) rotate(0deg); opacity: 1; }
           }
         `}</style>
       </div>
@@ -186,22 +211,25 @@ export function PlayChoices({ phase, personAName, personBName, onChoose }: PlayC
           onClick={() => {
             setChosen(i);
             onChoose(choice.delta);
-            // リアクション表示
-            setTimeout(() => setReaction(choice.reaction), 200);
+            // Show reaction emoji then text
+            const emojis = PHASE_REACTIONS[phase];
+            setReactionEmoji(emojis[i % emojis.length]);
+            setTimeout(() => setReaction(choice.reaction), 300);
           }}
           disabled={chosen !== null}
           className={`
             w-full text-left px-3 py-2.5 rounded border transition-all duration-300
             ${chosen === i
-              ? 'bg-white/10 border-white/30'
+              ? 'bg-white/10 border-white/30 scale-[0.97]'
               : chosen !== null
                 ? 'opacity-30 bg-transparent border-white/5'
-                : 'bg-white/[0.03] border-white/10 hover:bg-white/[0.08] hover:border-white/20'
+                : 'bg-white/[0.03] border-white/10 hover:bg-white/[0.08] hover:border-white/20 active:scale-[0.95]'
             }
           `}
           style={{
             opacity: 0,
-            animation: `choiceSlideIn 0.4s ease ${0.1 * i}s forwards`,
+            animation: `choiceSpringIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) ${0.12 * i}s forwards`,
+            transition: 'transform 0.15s ease, background 0.3s, border-color 0.3s, opacity 0.3s',
           }}
         >
           <div className="text-[12px] text-white/80 font-medium">{choice.text}</div>
@@ -210,9 +238,10 @@ export function PlayChoices({ phase, personAName, personBName, onChoose }: PlayC
       ))}
 
       <style>{`
-        @keyframes choiceSlideIn {
-          from { opacity: 0; transform: translateX(-8px); }
-          to { opacity: 1; transform: translateX(0); }
+        @keyframes choiceSpringIn {
+          0% { opacity: 0; transform: translateX(-16px) scale(0.95); }
+          60% { opacity: 1; transform: translateX(3px) scale(1.02); }
+          100% { opacity: 1; transform: translateX(0) scale(1); }
         }
       `}</style>
     </div>
