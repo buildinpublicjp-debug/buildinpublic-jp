@@ -3,6 +3,14 @@
 import { create } from 'zustand';
 import { AIPerson, Relationship, generateAllPeople, generateRelationships } from '../engine/personGenerator';
 import type { Phase } from '../engine/scoring';
+import type { District } from '../data/areas';
+import { CROSS_SECTION_SLOTS } from '../data/areas';
+
+export interface CoupleData {
+  relationship: Relationship;
+  personA: AIPerson;
+  personB: AIPerson;
+}
 
 interface PeopleState {
   people: AIPerson[];
@@ -15,6 +23,8 @@ interface PeopleState {
   getPartner: (personId: string) => AIPerson | undefined;
   getPeopleByPhase: (phase: Phase | 'all') => AIPerson[];
   getSortedByHoursLeft: () => AIPerson[];
+  getCrossSectionCouples: () => CoupleData[];
+  getCouplesByDistrict: (district: District) => CoupleData[];
 }
 
 export const usePeopleStore = create<PeopleState>((set, get) => ({
@@ -48,4 +58,21 @@ export const usePeopleStore = create<PeopleState>((set, get) => ({
 
   getSortedByHoursLeft: () =>
     [...get().people].sort((a, b) => a.hoursUntilSex - b.hoursUntilSex),
+
+  getCrossSectionCouples: () => {
+    const rels = get().relationships;
+    const slots = CROSS_SECTION_SLOTS;
+    return slots.map(slot => {
+      const rel = rels[slot.coupleIndex % rels.length];
+      const personA = get().getPersonById(rel.personA);
+      const personB = get().getPersonById(rel.personB);
+      return { relationship: rel, personA: personA!, personB: personB! };
+    });
+  },
+
+  getCouplesByDistrict: (district) => {
+    const all = get().getCrossSectionCouples();
+    const slots = CROSS_SECTION_SLOTS;
+    return all.filter((_, i) => slots[i].district === district);
+  },
 }));
