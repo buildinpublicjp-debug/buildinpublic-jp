@@ -6,6 +6,7 @@ import type { Phase } from '../engine/scoring';
 type CameraMode = 'god' | 'tps' | 'fps';
 export type ViewMode = 'god' | 'cross-section' | 'scene';
 export type InteractionMode = 'watch' | 'play';
+export type AnalysisLayer = 'default' | 'desire' | 'trust' | 'anxiety' | 'chemistry';
 type SwitchPhase = null | 'zoom_out' | 'zoom_in';
 type UIPanel = null | 'profile' | 'scene';
 
@@ -55,6 +56,10 @@ interface GameState {
   currentHour: number;
   setCurrentHour: (hour: number) => void;
 
+  // Analysis Layer
+  activeLayer: AnalysisLayer;
+  setActiveLayer: (layer: AnalysisLayer) => void;
+
   // Language
   language: 'ja' | 'en';
   setLanguage: (lang: 'ja' | 'en') => void;
@@ -102,6 +107,9 @@ export const useGameStore = create<GameState>((set, get) => ({
 
   currentHour: new Date().getHours(),
   setCurrentHour: (hour) => set({ currentHour: hour }),
+
+  activeLayer: 'default',
+  setActiveLayer: (layer) => set({ activeLayer: layer }),
 
   language: 'ja',
   setLanguage: (lang) => set({ language: lang }),
