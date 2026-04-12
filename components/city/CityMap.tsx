@@ -93,36 +93,72 @@ export function CityMap({ onSelectCouple }: CityMapProps) {
   const relationships = usePeopleStore(s => s.relationships);
   const [hoveredCouple, setHoveredCouple] = useState<string | null>(null);
 
-  // カップルをエリアにマッピング
+  // カップルをエリアにマッピング（同心円配置で密集回避）
   const couples = useMemo(() => {
     const result: CoupleOnMap[] = [];
-    const rng = seedRandom(42);
+
+    // まずエリアごとにカップルを分類
+    const areaGroups: Record<string, { rel: typeof relationships[0]; a: typeof people[0]; b: typeof people[0] }[]> = {};
+    for (const area of MAP_AREAS) {
+      areaGroups[area.name] = [];
+    }
 
     for (const rel of relationships) {
       const a = people.find(p => p.id === rel.personA);
       const b = people.find(p => p.id === rel.personB);
       if (!a || !b) continue;
 
-      // 2人の平均エリアで配置先を決定
       const mapArea = MAP_AREAS.find(ma =>
         ma.includes.includes(a.area) || ma.includes.includes(b.area)
       );
       if (!mapArea) continue;
-
-      // エリア内でランダム散布
-      const angle = rng() * Math.PI * 2;
-      const dist = rng() * mapArea.radius * 0.7;
-      result.push({
-        id: rel.id,
-        nameA: a.name.ja,
-        nameB: b.name.ja,
-        phase: a.currentPhase,
-        score: a.score,
-        area: mapArea.name,
-        offsetX: mapArea.cx + Math.cos(angle) * dist * 0.3,
-        offsetY: mapArea.cy + Math.sin(angle) * dist * 0.3,
-      });
+      areaGroups[mapArea.name].push({ rel, a, b });
     }
+
+    // エリアごとに同心円配置
+    for (const area of MAP_AREAS) {
+      const group = areaGroups[area.name];
+      const count = group.length;
+      if (count === 0) continue;
+
+      // 同心円: 1つ目は中心、残りはリングに配置
+      // 最小距離を確保するためリング半径を調整
+      const MIN_DOT_SPACING = 3; // SVG単位での最小間隔
+      const maxRadius = area.radius * 0.7;
+
+      for (let i = 0; i < count; i++) {
+        const { rel, a, b } = group[i];
+        let ox: number, oy: number;
+
+        if (i === 0) {
+          // 中心
+          ox = area.cx;
+          oy = area.cy;
+        } else {
+          // リング配置: 均等角度で、リングを増やす
+          const dotsPerRing = Math.max(6, Math.floor(2 * Math.PI * MIN_DOT_SPACING * (Math.ceil(i / 6)) / MIN_DOT_SPACING));
+          const ringIndex = Math.ceil(i / 6); // どのリングか
+          const posInRing = (i - 1) % 6; // リング内の位置
+          const ringRadius = Math.min(maxRadius, MIN_DOT_SPACING * ringIndex + 3);
+          const angle = (posInRing / Math.min(6, count - 1 - (ringIndex - 1) * 6)) * Math.PI * 2 + ringIndex * 0.5; // オフセットで重なり回避
+
+          ox = area.cx + Math.cos(angle) * ringRadius;
+          oy = area.cy + Math.sin(angle) * ringRadius;
+        }
+
+        result.push({
+          id: rel.id,
+          nameA: a.name.ja,
+          nameB: b.name.ja,
+          phase: a.currentPhase,
+          score: a.score,
+          area: area.name,
+          offsetX: ox,
+          offsetY: oy,
+        });
+      }
+    }
+
     return result;
   }, [people, relationships]);
 
