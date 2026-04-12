@@ -182,7 +182,7 @@ export function CityScene() {
       <CameraPositioner />
       <TilesLoadMonitor />
       <TilesRenderer
-        errorTarget={6}
+        errorTarget={4}
         maxDepth={20}
         loadSiblings={false}
       >
