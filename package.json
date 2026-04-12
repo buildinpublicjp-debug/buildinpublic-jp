@@ -9,20 +9,22 @@
     "brain": "npx ts-node --skipProject -O '{\"module\":\"commonjs\"}' scripts/brain.ts"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
+    "@supabase/supabase-js": "^2",
+    "framer-motion": "^12.38.0",
     "next": "14.2.0",
     "react": "^18",
     "react-dom": "^18",
-    "@supabase/supabase-js": "^2",
-    "@anthropic-ai/sdk": "^0.39.0"
+    "zustand": "^5.0.12"
   },
   "devDependencies": {
-    "typescript": "^5",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
-    "tailwindcss": "^3",
     "autoprefixer": "^10",
     "postcss": "^8",
-    "ts-node": "^10"
+    "tailwindcss": "^3",
+    "ts-node": "^10",
+    "typescript": "^5"
   }
 }
