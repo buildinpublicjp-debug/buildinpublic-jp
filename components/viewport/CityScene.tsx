@@ -21,18 +21,26 @@ const _normal = new THREE.Vector3();
 const _camPos = new THREE.Vector3();
 const _lookAt = new THREE.Vector3();
 const _up = new THREE.Vector3();
+const _east = new THREE.Vector3();
+const _north = new THREE.Vector3();
 const _tmpMat = new THREE.Matrix4();
+const WORLD_Z = new THREE.Vector3(0, 0, 1); // ECEF Z = north pole axis
 
 function computeCameraPose(latRad: number, lngRad: number, alt: number) {
   WGS84_ELLIPSOID.getCartographicToPosition(latRad, lngRad, 0, _ecef);
   _normal.copy(_ecef).normalize();
+  // Camera position = surface point + altitude along surface normal
   _camPos.set(
     _ecef.x + _normal.x * alt,
     _ecef.y + _normal.y * alt,
     _ecef.z + _normal.z * alt,
   );
   _lookAt.copy(_ecef);
-  _up.set(-_normal.z, _normal.x, _normal.y).normalize();
+  // Compute proper "up" = north direction at this surface point
+  // east = cross(Z_axis, normal), north = cross(normal, east)
+  _east.crossVectors(WORLD_Z, _normal).normalize();
+  _north.crossVectors(_normal, _east).normalize();
+  _up.copy(_north);
   _tmpMat.lookAt(_camPos, _lookAt, _up);
   const quaternion = new THREE.Quaternion().setFromRotationMatrix(_tmpMat);
   return { position: _camPos.clone(), quaternion };
