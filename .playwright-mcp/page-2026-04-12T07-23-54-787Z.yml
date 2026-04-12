@@ -1,0 +1,28 @@
+- generic [active]:
+  - generic [ref=e381]:
+    - generic [ref=e382]:
+      - button "← BACK" [ref=e383] [cursor=pointer]
+      - generic [ref=e384]:
+        - generic [ref=e385]: SHIBUYA
+        - generic [ref=e386]: 渋谷 — 4 couples
+      - generic [ref=e387]: 16:00
+    - generic [ref=e388]:
+      - img [ref=e390]:
+        - generic [ref=e393]: 1F
+        - generic [ref=e394]: 2F
+        - generic [ref=e395]: 3F
+        - generic [ref=e396]: 4F
+        - generic [ref=e400] [cursor=pointer]: 🍸
+        - generic [ref=e405] [cursor=pointer]: 🎤
+        - generic [ref=e409] [cursor=pointer]: 🛏
+        - generic [ref=e413]: SHIBUYA
+      - generic [ref=e415]:
+        - img [ref=e416]:
+          - generic [ref=e442]: 山口 朝陽
+          - generic [ref=e443]: 山本 陽菜
+          - generic [ref=e444]: 46%
+        - generic [ref=e446]: 下北沢の駅の改札。23歳の音楽家が待っている。改札の向こうから31歳のカフェ店員が歩いてくる。
+    - generic [ref=e447]:
+      - button "WATCH" [ref=e448] [cursor=pointer]
+      - button "PLAY" [ref=e450] [cursor=pointer]
+  - alert [ref=e82]

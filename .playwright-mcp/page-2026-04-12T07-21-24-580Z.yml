@@ -1,0 +1,27 @@
+- generic [active]:
+  - generic [ref=e83]:
+    - generic [ref=e84]:
+      - button "← BACK" [ref=e85] [cursor=pointer]
+      - generic [ref=e86]:
+        - generic [ref=e87]: SHINJUKU
+        - generic [ref=e88]: 新宿 — 3 couples
+      - generic [ref=e89]: 16:00
+    - generic [ref=e90]:
+      - img [ref=e92]:
+        - generic [ref=e95]: 1F
+        - generic [ref=e96]: 2F
+        - generic [ref=e97]: 3F
+        - generic [ref=e101] [cursor=pointer]: 🍽
+        - generic [ref=e105] [cursor=pointer]: 🍸
+        - generic [ref=e110] [cursor=pointer]: 🛏
+        - generic [ref=e111]: SHINJUKU
+      - generic [ref=e113]:
+        - img [ref=e114]:
+          - generic [ref=e138]: 松本 悠人
+          - generic [ref=e139]: 佐藤 陽菜
+          - generic [ref=e140]: 31%
+        - generic [ref=e142]: レストランに向かって歩いている。INFJとENFP。並んで歩く距離は50cm。
+    - generic [ref=e143]:
+      - button "WATCH" [ref=e144] [cursor=pointer]
+      - button "PLAY" [ref=e146] [cursor=pointer]
+  - alert [ref=e82]

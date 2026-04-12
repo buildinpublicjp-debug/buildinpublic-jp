@@ -1,0 +1,35 @@
+[    3313ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/:0
+[    3673ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ webpack-internal:///./node_modules/react-dom/cjs/react-dom.development.js:29889
+[    3722ms] Error: Cannot find module '/Users/og3939397/buildinpublic-jp/.next/server/middleware-manifest.json'
+Require stack:
+- /Users/og3939397/buildinpublic-jp/node_modules/next/dist/server/next-server.js
+- /Users/og3939397/buildinpublic-jp/node_modules/next/dist/server/dev/next-dev-server.js
+- /Users/og3939397/buildinpublic-jp/node_modules/next/dist/server/next.js
+- /Users/og3939397/buildinpublic-jp/node_modules/next/dist/server/lib/start-server.js
+    at Module._resolveFilename (node:internal/modules/cjs/loader:1144:15)
+    at <unknown> (file:///Users/og3939397/buildinpublic-jp/node_modules/next/dist/server/require-hook.js:55:36)
+    at Module._load (node:internal/modules/cjs/loader:985:27)
+    at Module.require (node:internal/modules/cjs/loader:1235:19)
+    at mod.require (file:///Users/og3939397/buildinpublic-jp/node_modules/next/dist/server/require-hook.js:65:28)
+    at require (node:internal/modules/helpers:176:18)
+    at DevServer.getMiddlewareManifest (file:///Users/og3939397/buildinpublic-jp/node_modules/next/dist/server/next-server.js:931:26)
+    at DevServer.getEdgeFunctionsPages (file:///Users/og3939397/buildinpublic-jp/node_modules/next/dist/server/next-server.js:947:31)
+    at NextNodeServer.handleCatchallRenderRequest (file:///Users/og3939397/buildinpublic-jp/node_modules/next/dist/server/next-server.js:238:49)
+    at async DevServer.handleRequestImpl (file:///Users/og3939397/buildinpublic-jp/node_modules/next/dist/server/base-server.js:811:17)
+    at async (file:///Users/og3939397/buildinpublic-jp/node_modules/next/dist/server/dev/next-dev-server.js:339:20)
+    at async Span.traceAsyncFn (file:///Users/og3939397/buildinpublic-jp/node_modules/next/dist/trace/trace.js:154:20)
+    at async DevServer.handleRequest (file:///Users/og3939397/buildinpublic-jp/node_modules/next/dist/server/dev/next-dev-server.js:336:24)
+    at async invokeRender (file:///Users/og3939397/buildinpublic-jp/node_modules/next/dist/server/lib/router-server.js:174:21)
+    at async handleRequest (file:///Users/og3939397/buildinpublic-jp/node_modules/next/dist/server/lib/router-server.js:353:24)
+    at async requestHandlerImpl (file:///Users/og3939397/buildinpublic-jp/node_modules/next/dist/server/lib/router-server.js:377:13)
+    at async Server.requestListener (file:///Users/og3939397/buildinpublic-jp/node_modules/next/dist/server/lib/start-server.js:141:13)
+[    3717ms] [LOG] [HMR] connected @ webpack-internal:///./node_modules/next/dist/client/components/react-dev-overlay/pages/websocket.js:45
+[    3740ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:3000/favicon.ico:0
+[   27238ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ webpack-internal:///./node_modules/next/dist/client/components/react-dev-overlay/pages/websocket.js:76
+[   28241ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ webpack-internal:///./node_modules/next/dist/client/components/react-dev-overlay/pages/websocket.js:76
+[   30178ms] [LOG] [HMR] connected @ webpack-internal:///./node_modules/next/dist/client/components/react-dev-overlay/pages/websocket.js:45
+[   30196ms] [LOG] [Fast Refresh] rebuilding @ webpack-internal:///./node_modules/next/dist/client/components/react-dev-overlay/pages/hot-reloader-client.js:221
+[   31158ms] [LOG] [Fast Refresh] rebuilding @ webpack-internal:///./node_modules/next/dist/client/components/react-dev-overlay/pages/hot-reloader-client.js:221
+[   33123ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:3000/_next/static/webpack/b9f636b3948fd2e7.webpack.hot-update.json:0
+[   33123ms] [WARNING] [Fast Refresh] performing full reload because your application had an unrecoverable error @ webpack-internal:///./node_modules/next/dist/client/components/react-dev-overlay/pages/hot-reloader-client.js:349
+[   33440ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/compiled/react-dom/cjs/react-dom.development.js:38559

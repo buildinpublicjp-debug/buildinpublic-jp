@@ -1,0 +1,35 @@
+- generic [active]:
+  - generic [ref=e1]:
+    - generic [ref=e4]:
+      - generic [ref=e5]:
+        - generic [ref=e7]:
+          - generic [ref=e8]: Tokyo Intimacy Map
+          - generic [ref=e9]: 10 couples monitored
+        - img [ref=e10]:
+          - generic [ref=e61]:
+            - generic [ref=e64]: SHIBUYA
+            - generic [ref=e67]: "109"
+            - generic [ref=e68]: 4 pairs
+          - generic [ref=e69]:
+            - generic [ref=e72]: SHINJUKU
+            - generic [ref=e83]: Golden Gai
+            - generic [ref=e84]: 3 pairs
+          - generic [ref=e85]:
+            - generic [ref=e88]: ROPPONGI
+            - generic [ref=e90]: HILLS
+            - generic [ref=e91]: 3 pairs
+        - generic [ref=e122]:
+          - generic [ref=e123]: Phase
+          - generic [ref=e126]: seed
+          - generic [ref=e129]: approach
+          - generic [ref=e132]: escalation
+          - generic [ref=e135]: critical
+          - generic [ref=e138]: imminent
+        - generic [ref=e140]: TAP A DOT TO ENTER
+      - generic [ref=e141]:
+        - button "SOUND" [ref=e142] [cursor=pointer]
+        - generic [ref=e143]: 16:00 JST
+    - link "VERSIONS" [ref=e144] [cursor=pointer]:
+      - /url: /versions
+    - button "FEEDBACK" [ref=e146] [cursor=pointer]
+  - alert [ref=e147]

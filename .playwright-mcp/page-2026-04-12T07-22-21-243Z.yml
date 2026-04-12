@@ -1,0 +1,27 @@
+- generic [active]:
+  - generic [ref=e236]:
+    - generic [ref=e237]:
+      - button "← BACK" [ref=e238] [cursor=pointer]
+      - generic [ref=e239]:
+        - generic [ref=e240]: SHINJUKU
+        - generic [ref=e241]: 新宿 — 3 couples
+      - generic [ref=e242]: 16:00
+    - generic [ref=e243]:
+      - img [ref=e245]:
+        - generic [ref=e248]: 1F
+        - generic [ref=e249]: 2F
+        - generic [ref=e250]: 3F
+        - generic [ref=e254] [cursor=pointer]: 🍽
+        - generic [ref=e258] [cursor=pointer]: 🍸
+        - generic [ref=e262] [cursor=pointer]: 🛏
+        - generic [ref=e264]: SHINJUKU
+      - generic [ref=e266]:
+        - img [ref=e267]:
+          - generic [ref=e293]: 山田 陽翔
+          - generic [ref=e294]: 山口 美咲
+          - generic [ref=e295]: 47%
+        - generic [ref=e297]: 新宿三丁目の駅の改札。19歳の営業が待っている。改札の向こうから33歳のデザイナーが歩いてくる。
+    - generic [ref=e298]:
+      - button "WATCH" [ref=e299] [cursor=pointer]
+      - button "PLAY" [ref=e301] [cursor=pointer]
+  - alert [ref=e82]

@@ -1,0 +1,74 @@
+- generic [active]:
+  - alert [ref=e1]
+  - generic [ref=e2]:
+    - img "Bar Moon" [ref=e4]
+    - generic:
+      - generic [ref=e7]:
+        - generic [ref=e8]:
+          - img [ref=e10]:
+            - generic [ref=e11]: SHIBUYA
+            - generic [ref=e12]: SHINJUKU
+            - generic [ref=e13]: ROPPONGI
+          - generic [ref=e35]:
+            - generic [ref=e36]: 17:23
+            - generic [ref=e37]: JST
+        - generic [ref=e38]:
+          - generic [ref=e39]: 山口 朝陽×山本 陽菜
+          - generic [ref=e40]:
+            - generic [ref=e41]: ENFP·INTJ
+            - generic [ref=e42]: "|"
+            - generic [ref=e43]: 1回目
+            - generic [ref=e44]: "|"
+            - generic [ref=e45]: APPROACH
+      - generic:
+        - generic: Bar Moon—渋谷
+        - generic: 下北沢の駅の改札。23歳の音楽家が待っている。改札の向こうから31歳のカフェ店員が歩いてくる。
+      - generic [ref=e48]:
+        - generic [ref=e49]:
+          - generic [ref=e50]:
+            - generic [ref=e51]:
+              - img [ref=e52]
+              - generic [ref=e55]: "32"
+            - generic [ref=e56]:
+              - generic [ref=e57]: CHEMISTRY
+              - generic [ref=e58]: 知性×情熱の爆発。INTJの計算をENFPが全部壊す。
+          - generic [ref=e59]:
+            - generic [ref=e60]: 接近
+            - generic [ref=e61]: 残り15.1h
+        - generic [ref=e62]:
+          - generic [ref=e63]:
+            - generic [ref=e64]: 欲望
+            - generic [ref=e67]: "56"
+          - generic [ref=e68]:
+            - generic [ref=e69]: 信頼
+            - generic [ref=e72]: "55"
+          - generic [ref=e73]:
+            - generic [ref=e74]: 興奮
+            - generic [ref=e77]: "50"
+          - generic [ref=e78]:
+            - generic [ref=e79]: 脆さ
+            - generic [ref=e82]: "10"
+          - generic [ref=e83]:
+            - generic [ref=e84]: 柔らかさ
+            - generic [ref=e87]: "15"
+          - generic [ref=e88]:
+            - generic [ref=e89]: 不安
+            - generic [ref=e92]: "27"
+        - generic [ref=e93]:
+          - generic [ref=e94]: 行きつけの店
+          - generic [ref=e95]: ·
+          - generic [ref=e96]: 初対面
+          - generic [ref=e97]: ·
+          - generic [ref=e98]: 相性 95%
+      - generic [ref=e99]:
+        - generic [ref=e100]: 1 / 10
+        - generic [ref=e101]:
+          - button "WATCH" [ref=e102] [cursor=pointer]
+          - button "PLAY" [ref=e104] [cursor=pointer]
+        - link "VER" [ref=e106] [cursor=pointer]:
+          - /url: /versions
+    - button "Previous couple" [ref=e107] [cursor=pointer]:
+      - img [ref=e108]
+    - button "Next couple" [ref=e110] [cursor=pointer]:
+      - img [ref=e111]
+  - button "FEEDBACK" [ref=e114] [cursor=pointer]

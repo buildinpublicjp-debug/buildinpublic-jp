@@ -1,0 +1,31 @@
+- generic [active]:
+  - generic [ref=e302]:
+    - generic [ref=e303]:
+      - generic [ref=e305]:
+        - generic [ref=e306]: Tokyo Intimacy Map
+        - generic [ref=e307]: 10 couples monitored
+      - img [ref=e308]:
+        - generic [ref=e311]:
+          - generic [ref=e314]: SHIBUYA
+          - generic [ref=e315]: "109"
+          - generic [ref=e316]: 4 pairs
+        - generic [ref=e317]:
+          - generic [ref=e320]: SHINJUKU
+          - generic [ref=e321]: ゴールデン街
+          - generic [ref=e322]: 3 pairs
+        - generic [ref=e323]:
+          - generic [ref=e326]: ROPPONGI
+          - generic [ref=e327]: HILLS
+          - generic [ref=e328]: 3 pairs
+      - generic [ref=e359]:
+        - generic [ref=e360]: Phase
+        - generic [ref=e363]: seed
+        - generic [ref=e366]: approach
+        - generic [ref=e369]: escalation
+        - generic [ref=e372]: critical
+        - generic [ref=e375]: imminent
+      - generic [ref=e377]: TAP A DOT TO ENTER
+    - generic [ref=e378]:
+      - button "SOUND" [ref=e379] [cursor=pointer]
+      - generic [ref=e380]: 16:00 JST
+  - alert [ref=e82]

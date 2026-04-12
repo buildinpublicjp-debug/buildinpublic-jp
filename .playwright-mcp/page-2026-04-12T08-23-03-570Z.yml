@@ -1,0 +1,72 @@
+- generic:
+  - alert [ref=e1]
+  - generic [ref=e2]:
+    - img "ゴールデン街 酒場" [ref=e129]
+    - generic:
+      - generic [ref=e7]:
+        - img [ref=e9]:
+          - generic [ref=e10]: SHIBUYA
+          - generic [ref=e11]: SHINJUKU
+          - generic [ref=e12]: ROPPONGI
+        - generic [ref=e34]:
+          - generic [ref=e35]: 伊藤 拓海×伊藤 琴音
+          - generic [ref=e36]: INTJ·ENFP
+          - generic [ref=e37]:
+            - generic [ref=e38]: 3回目
+            - generic [ref=e39]: "|"
+            - generic [ref=e40]: SEED
+        - generic [ref=e41]:
+          - generic [ref=e42]: 17:22
+          - generic [ref=e43]: JST
+      - generic:
+        - generic: ゴールデン街 酒場—新宿
+        - generic: 仕事中。営業の彼(19)は30分に1回スマホを確認する。既読がついた。返事はまだ。
+      - generic [ref=e46]:
+        - generic [ref=e47]:
+          - generic [ref=e48]:
+            - generic [ref=e49]:
+              - img [ref=e50]
+              - generic [ref=e53]: "22"
+            - generic [ref=e54]:
+              - generic [ref=e55]: CHEMISTRY
+              - generic [ref=e56]: 知性×情熱の爆発。INTJの計算をENFPが全部壊す。
+          - generic [ref=e57]:
+            - generic [ref=e58]: 種まき
+            - generic [ref=e59]: 残り22.5h
+        - generic [ref=e60]:
+          - generic [ref=e61]:
+            - generic [ref=e62]: 欲望
+            - generic [ref=e65]: "20"
+          - generic [ref=e66]:
+            - generic [ref=e67]: 信頼
+            - generic [ref=e70]: "57"
+          - generic [ref=e71]:
+            - generic [ref=e72]: 興奮
+            - generic [ref=e75]: "22"
+          - generic [ref=e76]:
+            - generic [ref=e77]: 脆さ
+            - generic [ref=e80]: "10"
+          - generic [ref=e81]:
+            - generic [ref=e82]: 柔らかさ
+            - generic [ref=e85]: "15"
+          - generic [ref=e86]:
+            - generic [ref=e87]: 不安
+            - generic [ref=e90]: "36"
+        - generic [ref=e91]:
+          - generic [ref=e92]: 職場
+          - generic [ref=e93]: ·
+          - generic [ref=e94]: 2回目
+          - generic [ref=e95]: ·
+          - generic [ref=e96]: 相性 95%
+      - generic [ref=e97]:
+        - generic [ref=e98]: 5 / 10
+        - generic [ref=e99]:
+          - button "WATCH" [ref=e100] [cursor=pointer]
+          - button "PLAY" [ref=e102] [cursor=pointer]
+        - link "VER" [ref=e104] [cursor=pointer]:
+          - /url: /versions
+    - button "Previous couple" [ref=e105] [cursor=pointer]:
+      - img [ref=e106]
+    - button "Next couple" [active] [ref=e108] [cursor=pointer]:
+      - img [ref=e109]
+  - button "FEEDBACK" [ref=e112] [cursor=pointer]
