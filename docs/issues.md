@@ -5,11 +5,11 @@
 
 ## 🔴 CRITICAL（まず動くようにする）
 
-- [ ] #001 app/page.tsxをR3F/3DTilesからデフォルメ断面図ビューに書き換え → 窓2が対応中
+- [x] #001 app/page.tsxをR3F/3DTilesからデフォルメ断面図ビューに書き換え → 窓2が修正済み
 - [x] #002 components/city/CityMap.tsx 新規作成 — 渋谷・新宿・六本木のデフォルメSVGマップ → 窓1が修正済み
 - [x] #003 components/cross-section/BuildingSection.tsx 新規作成 — X線断面図ビル → 窓1が修正済み
 - [x] #004 components/cross-section/AvatarPair.tsx 新規作成 — デフォルメアバター2人 → 窓1が修正済み
-- [ ] #005 components/cross-section/Room.tsx 新規作成 — 部屋+家具（バー、ホテル、レストラン） → 窓1が対応中
+- [x] #005 components/cross-section/Room.tsx 新規作成 — 部屋+家具（バー、ホテル、レストラン） → 窓1が修正済み
 - [x] #006 stores/gameStore.ts にviewMode追加（'god' | 'cross-section' | 'scene'） → 窓2が修正済み
 
 ## 🟡 IMPORTANT（体験を完成させる）
