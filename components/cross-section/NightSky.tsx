@@ -32,6 +32,12 @@ export function NightSky({ hour = 23 }: NightSkyProps) {
     return 'linear-gradient(180deg, #020208 0%, #08041a 40%, #0d0820 70%, #050310 100%)';
   }, [hour]);
 
+  // Time-based rain effect (#038)
+  const showRain = useMemo(() => {
+    const m = new Date().getMinutes();
+    return m >= 23 && m <= 53;
+  }, []);
+
   // Generate star positions deterministically
   const stars = useMemo(() => {
     const result: { x: number; y: number; r: number; delay: number; dur: number; bright: number }[] = [];
@@ -82,6 +88,35 @@ export function NightSky({ hour = 23 }: NightSkyProps) {
           </circle>
         ))}
 
+        {/* 雨エフェクト (#038) */}
+        {showRain && (
+          <g opacity="0.25">
+            {Array.from({ length: 20 }, (_, i) => {
+              const x = (i * 5.1 + 2) % 100;
+              const delay = (i * 0.17) % 1.8;
+              const dur = 0.9 + (i % 4) * 0.2;
+              return (
+                <line
+                  key={`sky-rain-${i}`}
+                  x1={x} y1={0} x2={x - 1.5} y2={5}
+                  stroke="#4466aa"
+                  strokeWidth="0.1"
+                  strokeOpacity="0.5"
+                >
+                  <animateTransform
+                    attributeName="transform"
+                    type="translate"
+                    values={`0,${-6};${-3},${106}`}
+                    dur={`${dur}s`}
+                    begin={`${delay}s`}
+                    repeatCount="indefinite"
+                  />
+                </line>
+              );
+            })}
+          </g>
+        )}
+
         {/* Tokyo skyline silhouette at bottom */}
         <path
           d="M0,100 L0,88 L3,88 L3,85 L5,85 L5,83 L7,83 L7,80 L9,80 L9,78
@@ -120,6 +155,29 @@ export function NightSky({ hour = 23 }: NightSkyProps) {
             />
           </rect>
         ))}
+        {/* 窓の雨粒 (#038) — raindrop streaks on windows */}
+        {showRain && (
+          <g>
+            {[[15,70,72],[17,67,69],[52,74,76],[73,72,74],[31,74,76]].map(([wx, wy, wy2], i) => (
+              <line
+                key={`drop-${i}`}
+                x1={wx + 0.25} y1={wy}
+                x2={wx + 0.1} y2={wy2}
+                stroke="#88aadd"
+                strokeWidth="0.08"
+                strokeOpacity="0"
+              >
+                <animate
+                  attributeName="stroke-opacity"
+                  values={`0;0.4;0;0.3;0`}
+                  dur={`${2 + i * 0.4}s`}
+                  begin={`${i * 0.5}s`}
+                  repeatCount="indefinite"
+                />
+              </line>
+            ))}
+          </g>
+        )}
       </svg>
     </div>
   );

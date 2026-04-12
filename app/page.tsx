@@ -9,8 +9,9 @@ import { AvatarPair } from '../components/cross-section/AvatarPair';
 import { CROSS_SECTION_SLOTS, DISTRICTS, type District } from '../data/areas';
 import { startTimeSync, getTimeTheme, getTimeOfDay } from '../lib/timeSync';
 import { ViewTransition } from '../components/cross-section/ViewTransition';
-import { initAudio, playAmbientTone, toggleMute, isMuted } from '../lib/audio';
+import { initAudio, playAmbientTone, toggleMute, isMuted, playDistrictBGM, playWhoosh, stopLayer } from '../lib/audio';
 import { NightSky } from '../components/cross-section/NightSky';
+import { PlayChoices } from '../components/cross-section/PlayChoices';
 
 // Typewriter text component for literary atmosphere (#035)
 function TypewriterText({ text, className, style }: { text: string; className?: string; style?: React.CSSProperties }) {
@@ -120,16 +121,24 @@ export default function Home() {
         selectArea(slot.district);
         setSelectedCoupleIndex(slot.coupleIndex);
         setSelectedRoomId(slot.district + '-' + slot.floor);
+        if (audioStarted) {
+          playWhoosh('in');
+          playDistrictBGM(slot.district, 0.5);
+        }
       }
     }
-  }, [selectArea]);
+  }, [selectArea, audioStarted]);
 
   // Handle back to GOD view
   const handleBack = useCallback(() => {
     selectArea(null);
     setSelectedRoomId(null);
     setSelectedCoupleIndex(null);
-  }, [selectArea]);
+    if (audioStarted) {
+      playWhoosh('out');
+      stopLayer('bgm');
+    }
+  }, [selectArea, audioStarted]);
 
   if (!initialized) {
     return (
@@ -427,6 +436,20 @@ function CrossSectionView({
           PLAY
         </button>
       </div>
+
+      {/* PlayChoices — shown in PLAY mode when a couple is selected (#039) */}
+      {interactionMode === 'play' && selectedCouple && (
+        <div className="w-full max-w-sm overflow-y-auto border-t border-white/5 mx-auto z-20">
+          <PlayChoices
+            phase={selectedCouple.personA.currentPhase}
+            personAName={selectedCouple.personA.name.ja}
+            personBName={selectedCouple.personB.name.ja}
+            onChoose={(delta) => {
+              console.log('PlayChoices delta:', delta);
+            }}
+          />
+        </div>
+      )}
     </div>
   );
 }
