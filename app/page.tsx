@@ -7,7 +7,9 @@ import { CityMap } from '../components/city/CityMap';
 import { BuildingSection, RoomSlot } from '../components/cross-section/BuildingSection';
 import { AvatarPair } from '../components/cross-section/AvatarPair';
 import { CROSS_SECTION_SLOTS, DISTRICTS, type District } from '../data/areas';
-import { startTimeSync, getTimeTheme } from '../lib/timeSync';
+import { startTimeSync, getTimeTheme, getTimeOfDay } from '../lib/timeSync';
+import { ViewTransition } from '../components/cross-section/ViewTransition';
+import { initAudio, playAmbientTone, toggleMute, isMuted } from '../lib/audio';
 
 export default function Home() {
   const initialize = usePeopleStore(s => s.initialize);
@@ -23,6 +25,8 @@ export default function Home() {
 
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
   const [selectedCoupleIndex, setSelectedCoupleIndex] = useState<number | null>(null);
+  const [audioStarted, setAudioStarted] = useState(false);
+  const [muted, setMuted] = useState(false);
 
   // Initialize people + time sync
   useEffect(() => {
@@ -32,6 +36,21 @@ export default function Home() {
   useEffect(() => {
     return startTimeSync(setCurrentHour);
   }, [setCurrentHour]);
+
+  // Start ambient audio on first user interaction
+  const handleStartAudio = useCallback(() => {
+    if (audioStarted) return;
+    initAudio();
+    setAudioStarted(true);
+  }, [audioStarted]);
+
+  // Update ambient tone when hour changes
+  useEffect(() => {
+    if (!audioStarted) return;
+    const timeOfDay = getTimeOfDay(currentHour);
+    const stop = playAmbientTone(timeOfDay);
+    return stop;
+  }, [currentHour, audioStarted]);
 
   const timeTheme = getTimeTheme(currentHour);
 
@@ -75,6 +94,7 @@ export default function Home() {
     <div
       className="fixed inset-0 overflow-hidden transition-all duration-1000"
       style={{ background: timeTheme.bg }}
+      onClick={handleStartAudio}
     >
       {/* 時間帯オーバーレイ */}
       <div
@@ -82,36 +102,49 @@ export default function Home() {
         style={{ opacity: timeTheme.overlay * 0.5 }}
       />
 
-      {/* GOD VIEW — デフォルメマップ */}
-      {viewMode === 'god' && (
-        <div className="relative w-full h-full z-10">
-          <CityMap onSelectCouple={handleSelectCouple} />
+      {/* ディゾルブ遷移付きビュー切替 */}
+      <ViewTransition viewKey={viewMode + (selectedAreaId || '')} duration={600}>
+        {/* GOD VIEW — デフォルメマップ */}
+        {viewMode === 'god' && (
+          <div className="relative w-full h-full z-10">
+            <CityMap onSelectCouple={handleSelectCouple} />
 
-          {/* 時刻表示 */}
-          <div className="absolute top-4 right-4 z-20">
-            <div className="text-[10px] tracking-[3px] text-white/25 font-mono">
-              {String(currentHour).padStart(2, '0')}:00 JST
+            {/* 時刻表示 + 音声トグル */}
+            <div className="absolute top-4 right-4 z-20 flex items-center gap-3">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (!audioStarted) { initAudio(); setAudioStarted(true); }
+                  setMuted(toggleMute());
+                }}
+                className="text-[10px] tracking-[2px] text-white/25 hover:text-white/50 transition-colors pointer-events-auto"
+              >
+                {muted ? 'MUTED' : 'SOUND'}
+              </button>
+              <div className="text-[10px] tracking-[3px] text-white/25 font-mono">
+                {String(currentHour).padStart(2, '0')}:00 JST
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* CROSS-SECTION VIEW — 断面図 */}
-      {viewMode === 'cross-section' && selectedAreaId && (
-        <CrossSectionView
-          district={selectedAreaId as District}
-          selectedRoomId={selectedRoomId}
-          selectedCoupleIndex={selectedCoupleIndex}
-          interactionMode={interactionMode}
-          currentHour={currentHour}
-          onRoomSelect={(roomId, coupleIndex) => {
-            setSelectedRoomId(roomId);
-            setSelectedCoupleIndex(coupleIndex);
-          }}
-          onBack={handleBack}
-          onToggleMode={() => setInteractionMode(interactionMode === 'watch' ? 'play' : 'watch')}
-        />
-      )}
+        {/* CROSS-SECTION VIEW — 断面図 */}
+        {viewMode === 'cross-section' && selectedAreaId && (
+          <CrossSectionView
+            district={selectedAreaId as District}
+            selectedRoomId={selectedRoomId}
+            selectedCoupleIndex={selectedCoupleIndex}
+            interactionMode={interactionMode}
+            currentHour={currentHour}
+            onRoomSelect={(roomId, coupleIndex) => {
+              setSelectedRoomId(roomId);
+              setSelectedCoupleIndex(coupleIndex);
+            }}
+            onBack={handleBack}
+            onToggleMode={() => setInteractionMode(interactionMode === 'watch' ? 'play' : 'watch')}
+          />
+        )}
+      </ViewTransition>
     </div>
   );
 }
