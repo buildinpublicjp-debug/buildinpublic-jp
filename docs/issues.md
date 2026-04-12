@@ -18,7 +18,7 @@
 - [x] #008 感情オーラSVGアニメーション（2人の間で色が混ざる） → 窓1がAvatarPair.tsx内で実装済み（aura-merge gradient + animate）
 - [x] #009 体の色変化（ほてり表現） → 窓1がAvatarPair.tsx内で実装済み（PHASE_SKIN blush + ほっぺアニメ）
 - [x] #010 WATCH/PLAYモード切替UI → 窓2が修正済み（store + page.tsx統合）
-- [ ] #011 BGM+環境音レイヤー（Tone.js or HTML5 Audio） → 窓2が対応中（lib/audio.ts）
+- [x] #011 BGM+環境音レイヤー（Web Audio API） → 窓2が修正済み（lib/audio.ts + page.tsx統合）
 - [x] #012 リアルタイム時刻連動（昼夜の背景変化） → 窓2が修正済み（timeSync + page.tsx統合）
 - [ ] #013 ミニマップにカップルのドット表示 → 未着手
 
