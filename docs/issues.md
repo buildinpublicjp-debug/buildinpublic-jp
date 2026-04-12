@@ -10,7 +10,7 @@
 - [ ] #003 components/cross-section/BuildingSection.tsx 新規作成 — X線断面図ビル → 未着手
 - [ ] #004 components/cross-section/AvatarPair.tsx 新規作成 — デフォルメアバター2人 → 未着手
 - [ ] #005 components/cross-section/Room.tsx 新規作成 — 部屋+家具（バー、ホテル、レストラン） → 未着手
-- [ ] #006 stores/gameStore.ts にviewMode追加（'god' | 'cross-section' | 'scene'） → 未着手
+- [ ] #006 stores/gameStore.ts にviewMode追加（'god' | 'cross-section' | 'scene'） → 窓2が対応中
 
 ## 🟡 IMPORTANT（体験を完成させる）
 
@@ -24,7 +24,7 @@
 
 ## 🟢 NICE TO HAVE（磨き上げ）
 
-- [ ] #014 ランドマークSVG（109、ゴールデン街、六本木ヒルズ） → 未着手
+- [ ] #014 ランドマークSVG（109、ゴールデン街、六本木ヒルズ） → 窓4が対応中
 - [ ] #015 デートの記憶タイムライン（ディズニー、上野公園等） → 未着手
 - [ ] #016 PLAYモードの選択肢UI（ギャルゲー統合） → 未着手
 - [ ] #017 モバイルレスポンシブ対応 → 未着手
