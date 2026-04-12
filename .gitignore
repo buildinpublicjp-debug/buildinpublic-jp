@@ -1,1 +1,2 @@
-.next/\nnode_modules/\n.env\n.env.local\n*.env.local\n
+.next/\nnode_modules/\n.env\n.env.local\n*.env.local\nnode_modules/
+.next/
