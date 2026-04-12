@@ -1,3 +1,86 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* ============================
+   断面図ビュー — 基盤スタイル
+   ============================ */
+
+/* 感情オーラ — 2人の間で色が混ざるグラデーション */
+.aura-glow {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(20px);
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+
+/* ほてり表現 — アバターの体色が変化 */
+.avatar-hotflush {
+  transition: filter 1.5s ease-in-out;
+}
+.avatar-hotflush[data-phase="curious"] {
+  filter: saturate(1) hue-rotate(0deg);
+}
+.avatar-hotflush[data-phase="flirty"] {
+  filter: saturate(1.2) hue-rotate(10deg) brightness(1.05);
+}
+.avatar-hotflush[data-phase="tension"] {
+  filter: saturate(1.5) hue-rotate(20deg) brightness(1.1);
+}
+.avatar-hotflush[data-phase="intimate"] {
+  filter: saturate(1.8) hue-rotate(30deg) brightness(1.15);
+}
+.avatar-hotflush[data-phase="afterglow"] {
+  filter: saturate(0.9) hue-rotate(-10deg) brightness(1.05);
+}
+
+/* X線断面図ビル — 輪郭だけ残すスタイル */
+.building-xray {
+  stroke: rgba(160, 210, 219, 0.4);
+  stroke-width: 1.5;
+  fill: rgba(10, 10, 20, 0.3);
+}
+.building-xray:hover {
+  stroke: rgba(160, 210, 219, 0.7);
+  fill: rgba(10, 10, 20, 0.5);
+  transition: all 0.3s ease;
+}
+
+/* 部屋の暖かい光 */
+.room-glow {
+  box-shadow: inset 0 0 30px rgba(255, 228, 160, 0.1);
+  background: linear-gradient(180deg, rgba(255, 228, 160, 0.03) 0%, transparent 100%);
+}
+
+/* ランドマークSVGのホバーエフェクト */
+.landmark-svg {
+  transition: transform 0.3s ease, filter 0.3s ease;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+.landmark-svg:hover {
+  transform: scale(1.05) translateY(-2px);
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.5));
+}
+
+/* 昼夜グラデーション背景 */
+.sky-gradient-night {
+  background: linear-gradient(180deg, #050508 0%, #0A0A14 30%, #1A1A2E 100%);
+}
+.sky-gradient-evening {
+  background: linear-gradient(180deg, #1A0A2E 0%, #2D1B4E 30%, #FF6B35 80%, #FFD700 100%);
+}
+.sky-gradient-day {
+  background: linear-gradient(180deg, #87CEEB 0%, #B0E0E6 50%, #E0F0FF 100%);
+}
+
+/* テキストグロー（ネオン風） */
+.text-glow-pink {
+  text-shadow: 0 0 8px rgba(255, 105, 180, 0.6), 0 0 20px rgba(255, 105, 180, 0.3);
+}
+.text-glow-gold {
+  text-shadow: 0 0 8px rgba(255, 215, 0, 0.6), 0 0 20px rgba(255, 215, 0, 0.3);
+}
+.text-glow-blue {
+  text-shadow: 0 0 8px rgba(0, 191, 255, 0.6), 0 0 20px rgba(0, 191, 255, 0.3);
+}

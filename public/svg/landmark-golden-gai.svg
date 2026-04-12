@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 140" fill="none">
+  <!-- ゴールデン街 - 密集した小さな飲み屋の路地 -->
+  <!-- 背景の路地 -->
+  <rect x="0" y="100" width="160" height="40" fill="#2A1F3D"/>
+
+  <!-- 左の店 -->
+  <rect x="8" y="50" width="28" height="50" fill="#3D2B4F" stroke="#5A4670" stroke-width="1.5"/>
+  <rect x="12" y="80" width="10" height="20" rx="1" fill="#FF8C42" opacity="0.7"/>
+  <rect x="24" y="80" width="8" height="12" rx="1" fill="#FFE4A0" opacity="0.5"/>
+  <!-- 提灯 -->
+  <ellipse cx="22" cy="48" rx="6" ry="8" fill="#FF4444" opacity="0.9"/>
+  <line x1="22" y1="40" x2="22" y2="42" stroke="#AA3333" stroke-width="1"/>
+  <text x="22" y="51" text-anchor="middle" font-size="5" fill="white" font-family="serif">酒</text>
+
+  <!-- 中央左の店 -->
+  <rect x="40" y="45" width="25" height="55" fill="#4A3560" stroke="#5A4670" stroke-width="1.5"/>
+  <rect x="44" y="75" width="8" height="25" rx="1" fill="#FFD700" opacity="0.6"/>
+  <rect x="54" y="78" width="7" height="10" rx="1" fill="#FFE4A0" opacity="0.4"/>
+  <!-- のれん -->
+  <rect x="42" y="72" width="21" height="6" rx="1" fill="#1A4080" opacity="0.8"/>
+  <line x1="48" y1="72" x2="48" y2="78" stroke="#1A4080" stroke-width="0.5" opacity="0.6"/>
+  <line x1="53" y1="72" x2="53" y2="78" stroke="#1A4080" stroke-width="0.5" opacity="0.6"/>
+  <line x1="58" y1="72" x2="58" y2="78" stroke="#1A4080" stroke-width="0.5" opacity="0.6"/>
+
+  <!-- 中央の店 -->
+  <rect x="68" y="40" width="24" height="60" fill="#3D2B4F" stroke="#5A4670" stroke-width="1.5"/>
+  <rect x="72" y="70" width="16" height="30" rx="1" fill="#FF6B35" opacity="0.5"/>
+  <!-- 看板 -->
+  <rect x="70" y="42" width="20" height="10" rx="2" fill="#FFD700"/>
+  <text x="80" y="50" text-anchor="middle" font-size="6" fill="#2A1F3D" font-weight="bold" font-family="sans-serif">BAR</text>
+  <!-- ネオン -->
+  <rect x="72" y="56" width="16" height="2" rx="1" fill="#FF69B4">
+    <animate attributeName="opacity" values="0.5;1;0.5" dur="1.5s" repeatCount="indefinite"/>
+  </rect>
+
+  <!-- 中央右の店 -->
+  <rect x="96" y="48" width="26" height="52" fill="#4A3560" stroke="#5A4670" stroke-width="1.5"/>
+  <rect x="100" y="78" width="9" height="22" rx="1" fill="#FFE4A0" opacity="0.6"/>
+  <rect x="111" y="80" width="7" height="10" rx="1" fill="#FFE4A0" opacity="0.3"/>
+  <!-- 提灯 -->
+  <ellipse cx="109" cy="46" rx="5" ry="7" fill="#FF6347" opacity="0.85"/>
+  <text x="109" y="49" text-anchor="middle" font-size="4.5" fill="white" font-family="serif">燗</text>
+
+  <!-- 右の店 -->
+  <rect x="126" y="52" width="26" height="48" fill="#3D2B4F" stroke="#5A4670" stroke-width="1.5"/>
+  <rect x="130" y="78" width="10" height="22" rx="1" fill="#87CEEB" opacity="0.4"/>
+  <rect x="142" y="82" width="6" height="8" rx="1" fill="#FFE4A0" opacity="0.5"/>
+  <!-- のれん -->
+  <rect x="128" y="75" width="22" height="5" rx="1" fill="#8B0000" opacity="0.7"/>
+
+  <!-- 路地の灯り -->
+  <circle cx="35" cy="95" r="8" fill="#FFD700" opacity="0.1"/>
+  <circle cx="80" cy="95" r="10" fill="#FF8C42" opacity="0.08"/>
+  <circle cx="125" cy="95" r="8" fill="#FFD700" opacity="0.1"/>
+
+  <!-- 地面 -->
+  <line x1="5" y1="100" x2="155" y2="100" stroke="#5A4670" stroke-width="1.5"/>
+
+  <!-- 猫のシルエット -->
+  <path d="M140 97 Q142 92 144 94 L146 92 L147 94 Q149 92 150 97 Q148 99 145 99 Q142 99 140 97Z" fill="#2A1F3D" opacity="0.7"/>
+</svg>
