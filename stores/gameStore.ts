@@ -5,6 +5,7 @@ import type { Phase } from '../engine/scoring';
 
 type CameraMode = 'god' | 'tps' | 'fps';
 export type ViewMode = 'god' | 'cross-section' | 'scene';
+export type InteractionMode = 'watch' | 'play';
 type SwitchPhase = null | 'zoom_out' | 'zoom_in';
 type UIPanel = null | 'profile' | 'scene';
 
@@ -20,6 +21,10 @@ interface GameState {
   setViewMode: (mode: ViewMode) => void;
   selectedAreaId: string | null;
   selectArea: (areaId: string | null) => void;
+
+  // Interaction
+  interactionMode: InteractionMode;
+  setInteractionMode: (mode: InteractionMode) => void;
 
   // Camera
   cameraMode: CameraMode;
@@ -60,6 +65,9 @@ export const useGameStore = create<GameState>((set, get) => ({
   setViewMode: (mode) => set({ viewMode: mode }),
   selectedAreaId: null,
   selectArea: (areaId) => set({ selectedAreaId: areaId, viewMode: areaId ? 'cross-section' : 'god' }),
+
+  interactionMode: 'watch',
+  setInteractionMode: (mode) => set({ interactionMode: mode }),
 
   cameraMode: 'god',
   switchPhase: null,
