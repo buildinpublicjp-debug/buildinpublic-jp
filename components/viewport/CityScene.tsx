@@ -1,8 +1,7 @@
 'use client';
 
-import { useRef, useMemo } from 'react';
+import { useRef, useMemo, useEffect } from 'react';
 import * as THREE from 'three';
-import { useFrame } from '@react-three/fiber';
 import { AREAS } from '../../data/areas';
 
 function srand(seed: number) {
@@ -10,12 +9,11 @@ function srand(seed: number) {
   return () => { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; };
 }
 
-// OPTIMIZED: Fewer buildings, no PointLights
 export function CityScene() {
   const buildings = useMemo(() => {
     const data: { pos: [number, number, number]; scale: [number, number, number] }[] = [];
     AREAS.forEach((area, idx) => {
-      const count = Math.min(area.weight * 3, 20); // REDUCED from weight*8
+      const count = Math.min(area.weight * 3, 20);
       const r = srand(idx * 997 + 42);
       for (let i = 0; i < count; i++) {
         const x = area.x + (r() - 0.5) * 50;
@@ -31,7 +29,8 @@ export function CityScene() {
   const meshRef = useRef<THREE.InstancedMesh>(null!);
   const tempObj = useMemo(() => new THREE.Object3D(), []);
 
-  useMemo(() => {
+  // FIX: useEffect instead of useMemo — ref is null during useMemo
+  useEffect(() => {
     if (!meshRef.current) return;
     buildings.forEach((b, i) => {
       tempObj.position.set(...b.pos);
@@ -53,13 +52,13 @@ export function CityScene() {
       {/* Grid */}
       <gridHelper args={[2000, 50, '#111118', '#0c0c12']} />
 
-      {/* Buildings - single InstancedMesh, no lights */}
+      {/* Buildings - single InstancedMesh */}
       <instancedMesh ref={meshRef} args={[undefined, undefined, buildings.length]}>
         <boxGeometry args={[1, 1, 1]} />
         <meshBasicMaterial color="#0e0e18" />
       </instancedMesh>
 
-      {/* Street light markers - emissive only, NO PointLight */}
+      {/* Area markers - emissive spheres only, no PointLight */}
       {AREAS.map((area, i) => (
         <mesh key={i} position={[area.x, 3, area.z]}>
           <sphereGeometry args={[0.3, 6, 6]} />
